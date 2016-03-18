@@ -85,8 +85,8 @@ void loop() {
 
 void ScorpionDrive(int left, int right)
 {
-   ui_Left_Motor_Speed = constrain(1500 + left, 1600, 2100);
-   ui_Right_Motor_Speed = constrain(1500 + right, 1600, 2100);
+   ui_Left_Motor_Speed = constrain(1500 + leftSpeed, 1600, 2100);
+   ui_Right_Motor_Speed = constrain(1500 + rightSpeed, 1600, 2100);
    servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed);
    servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed);
 }
