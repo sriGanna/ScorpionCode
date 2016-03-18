@@ -4,8 +4,6 @@
 #include <EEPROM.h>
 #include <uSTimer2.h>
 
-//servo variables
-
 
 //Scoripion Drive Varaibles
 int leftSpeed, rightSpeed;
@@ -13,7 +11,7 @@ Servo servo_RightMotor;
 Servo servo_LeftMotor;
 
 //servey function
-Servo rightClawSurvey,leftClawSurvey;
+Servo servo_RightClawSurvey,servo_LeftClawSurvey;
 long kssurveyStartTime = 0, kssurveyEndTime = 0;
 int sgSurveyIncrement; 
 
@@ -24,6 +22,9 @@ int sgClawGripClosed;
 //hall effect function varaibles
 int sgMagnetDetectionValue;
 
+//passBack function variables
+int sgPassBackValue;
+
 //Port pin constants
 const int ci_Right_Motor = 8;
 const int ci_Left_Motor = 9;
@@ -31,10 +32,10 @@ const int ci_Ultrasonic_Ping = 2;   //input plug
 const int ci_Ultrasonic_Data = 3;   //output plug
 const int ci_RightClawHorizontal = 6;
 const int ci_LeftClawHorizontal =7;
-const int ci_rightClawGrip=0;
-const int ci_leftClawGrip=0;
-const int ci_leftClawVertical=0;
-const int ci_rightClawVertical=0;
+const int ci_RightClawGrip=0;
+const int ci_LeftClawGrip=0;
+const int ci_LeftClawVertical=0;
+const int ci_RightClawVertical=0;
 
 //motor speed vairables 
 const int ci_Left_Motor_Stop = 1500;        // 200 for brake mode; 1500 for stop
@@ -45,9 +46,9 @@ unsigned int ui_Right_Motor_Speed;
 
 //functions
 void ScorpionDrive(int leftSpeed, int rightSpeed);
-void clawGrip(int clawPin);
+void clawGrip(int clawHorizontalPin);
 void Survey (long surveyInterval);
-void passBack ();
+void passBack (int calwVerticalPin);
 void placement();
 void tailTuck();
 bool magnet();
@@ -91,10 +92,11 @@ void ScorpionDrive(int left, int right)
    servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed);
 }
 
-void clawGrip(int claw)
+void clawGrip(int clawHorizontalPin)
 {
   sgMyServo.attach(claw);
   sgMyServo.write(sgClawGripClosed);
+  sgMyServo.detach(claw)
 }
 void Survey(long surveyInterval)
 {
@@ -126,6 +128,15 @@ void Ping()
   //time that it takes from when the Pin goes HIGH until it goes LOW 
   ul_Echo_Time = pulseIn(ci_Ultrasonic_Data, HIGH, 10000);
 }
+
+void passBack(int clawVerticalPin);
+{
+  sgMyServo.attach(clawVerticalPin);
+  sgMyServo.write(sgPassBackValue);
+  sgMyServo.detach(clawVerticalPin);
+ 
+}
+
 
 
 
