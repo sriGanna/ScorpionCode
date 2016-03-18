@@ -9,7 +9,11 @@ Servo servo_RightMotor;
 Servo servo_LeftMotor;
 
 //global variables
-int left, right;
+int leftSpeed, rightSpeed;
+int sgClawGripClosed;
+Servo sgMyServo;
+long sgPrev;
+
 
 //Port pin constants
 const int ci_Right_Motor = 8;
@@ -24,7 +28,17 @@ unsigned int ui_Left_Motor_Speed;
 unsigned int ui_Right_Motor_Speed;
 
 //functions
-void ScorpionDrive(int left, int right);
+void ScorpionDrive(int leftSpeed, int rightSpeed);
+void clawGrip(int clawPin);
+void clawSurvey (long surveyInterval);
+void passBack ();
+void placement();
+void tailTuck();
+bool magnet();
+void modeTwoPickUp();
+void modeTwoPlacement();
+void Ping();
+
 
 void setup() {
  
@@ -49,3 +63,22 @@ void ScorpionDrive(int left, int right)
    servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed);
    servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed);
 }
+
+void clawGrip(int claw)
+{
+  sgMyServo.attach(claw);
+  sgMyServo.write(sgClawGripClosed);
+}
+void clawSurvey(long surveyInterval)
+{
+ 
+  sgPrev = millis();
+  if(millis() - sgPrev >= surveyInterval)
+  {
+    
+  }
+  
+  
+}
+
+
