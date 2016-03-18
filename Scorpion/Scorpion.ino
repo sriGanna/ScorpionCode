@@ -12,13 +12,20 @@ Servo servo_LeftMotor;
 int leftSpeed, rightSpeed;
 int sgClawGripClosed;
 Servo sgMyServo;
+Servo rightClawSurvey,leftClawSurvey;
 long sgPrev;
-
+int sgSurveyIncrement; 
+int sgMagnetDetectionValue;
 
 //Port pin constants
 const int ci_Right_Motor = 8;
 const int ci_Left_Motor = 9;
-
+const int rightClawSurveyPin=0;
+const int leftClawSurveyPin=0;
+const int rightClawGripPin=0;
+const int leftClawGripPin=0;
+const int leftClawVerticalPin=0;
+const int rightClawVerticalPin=0;
 
 //motor speed vairables 
 const int ci_Left_Motor_Stop = 1500;        // 200 for brake mode; 1500 for stop
@@ -38,7 +45,7 @@ bool magnet();
 void modeTwoPickUp();
 void modeTwoPlacement();
 void Ping();
-
+bool magnet(int hallEffectPin);
 
 void setup() {
  
@@ -75,10 +82,17 @@ void clawSurvey(long surveyInterval)
   sgPrev = millis();
   if(millis() - sgPrev >= surveyInterval)
   {
-    
+    rightClawSurvey.write(sgSurveyIncrement);
+    leftClawSurvey.write(sgSurveyIncrement);
   }
-  
-  
+   
+}
+bool magnet(int hallEffectPin)
+{
+  if (analogRead(hallEffectPin)>= sgMagnetDetectionValue)
+    return true;
+  else
+    return false;
 }
 
 
