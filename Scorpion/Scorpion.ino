@@ -11,8 +11,12 @@ Servo servo_RightMotor;
 Servo servo_LeftMotor;
 
 //servey function
-Servo servo_RightClawSurvey,servo_LeftClawSurvey;
-long kssurveyStartTime = 0, kssurveyEndTime = 0;
+Servo servo_RightClawHorizontal,servo_LeftClawHoriztonal;
+long kssurveyNewTime,kssurveyPrevTime;
+int ksAngle;
+bool ksScanLeft;
+
+
 int sgSurveyIncrement; 
 
 // grip function variable
@@ -24,6 +28,9 @@ int sgMagnetDetectionValue;
 
 //passBack function variables
 int sgPassBackValue;
+
+//ping function variables
+long ul_Echo_Time;
 
 //Port pin constants
 const int ci_Right_Motor = 8;
@@ -94,24 +101,32 @@ void ScorpionDrive(int left, int right)
 
 void clawGrip(int clawHorizontalPin)
 {
-  sgMyServo.attach(claw);
+  sgMyServo.attach(clawHorizontalPin);
   sgMyServo.write(sgClawGripClosed);
-  sgMyServo.detach(claw)
+  delay(1000);
+  sgMyServo.detach();
 }
 void Survey(long surveyInterval)
 {
+  kssurveyNewTime = millis();
+ if(ksAngle>=180)
+ ksScanLeft = false;
+ if(ksScanLeft == true)
+ ksAngle += 1;
+ else if (ksScanLeft == false)
+ ksAngle = ksAngle - 1; 
  
-  kssurveyStartTime = millis();
-  if(millis() - kssurveyStartTime >= surveyInterval)
+ if(kssurveyNewTime - kssurveyPrevTime >= surveyInterval)
   {
-    rightClawSurvey.write(sgSurveyIncrement);
-    leftClawSurvey.write(sgSurveyIncrement);
+    servo_RightClawHorizontal.write(ksAngle); 
+    kssurveyPrevTime = kssurveyNewTime;
   }
    
 }
 bool magnet(int hallEffectPin)
 {
-  if (analogRead(hallEffectPin)>= sgMagnetDetectionValue)
+  
+  if (abs(analogRead(hallEffectPin))>= sgMagnetDetectionValue)
     return true;
   else
     return false;
@@ -129,11 +144,12 @@ void Ping()
   ul_Echo_Time = pulseIn(ci_Ultrasonic_Data, HIGH, 10000);
 }
 
-void passBack(int clawVerticalPin);
+void passBack(int clawVerticalPin)
 {
   sgMyServo.attach(clawVerticalPin);
   sgMyServo.write(sgPassBackValue);
-  sgMyServo.detach(clawVerticalPin);
+  delay(1000);
+  sgMyServo.detach();
  
 }
 
