@@ -32,6 +32,10 @@ int sgPassBackValue;
 //ping function variables
 long ul_Echo_Time;
 
+//tail constants
+int degreeOfExtension=45;
+int degreeOfTurn=0;
+
 //Port pin constants
 const int ci_Right_Motor = 8;
 const int ci_Left_Motor = 9;
@@ -58,11 +62,14 @@ void Survey (long surveyInterval);
 void passBack (int calwVerticalPin);
 void placement();
 void tailTuck();
+void tailExtend(int degreeOfExtension, int degreeOfTurn); 
 bool magnet();
 void modeTwoPickUp();
 void modeTwoPlacement();
 void Ping();
 bool magnet(int hallEffectPin);
+void turn90L();
+void turn90R(); 
 
 void setup() {
  
@@ -86,8 +93,7 @@ void setup() {
 
 void loop() {
 
-
-  ScorpionDrive(0,0);
+clawGrip(8); 
 
 }
 
@@ -102,7 +108,7 @@ void ScorpionDrive(int left, int right)
 void clawGrip(int clawHorizontalPin)
 {
   sgMyServo.attach(clawHorizontalPin);
-  sgMyServo.write(sgClawGripClosed);
+  sgMyServo.write(sgClawGripOpen);
   delay(1000);
   sgMyServo.detach();
 }
@@ -151,6 +157,41 @@ void passBack(int clawVerticalPin)
   delay(1000);
   sgMyServo.detach();
  
+}
+
+void ModeTwoPickUp(){
+  Ping();
+  if(( ul_Echo_Time <= 10 /**mm**/)&&( ul_Echo_Time>=5)){
+    ScorpionDrive (1500, 1500);
+    tailExtend(degreeOfExtension, degreeOfTurn); //guess need to know actual value (extends to 45 and looks at position
+    if(magnet(hallEffectPin)==true){ //NEED PIN NUMBER***********************************************************************
+    magnet(); //picks up cube
+      tailTuck(); //tucks the tail
+    } 
+    else{
+      if (degreeOfTurn <=90){
+      degreeOfTurn = degreeOfTurn + 90;
+      ModeTwoPickUp(); 
+      }
+      else{
+      degreeOfTurn = 0; ///MIGHT NEED TO WATCH OUT FOR BOT PLACING CUBE******************************************************
+      ModeTwoPickUp(); 
+      }
+    }
+  }
+  else {
+    ScorpionDrive(1800, 1800); 
+  }
+}
+
+void modeTwoPlacement(){
+ Ping();
+  if(ul_Echo_Time >= 10 /**mm**/) //NEED ACTUAL DISTANCE AWAY*************************************************************
+  {
+    turn90R();
+    ScorpionDrive(1800, 1800);
+    if (//Time)
+  }
 }
 
 
