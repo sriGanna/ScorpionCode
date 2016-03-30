@@ -21,6 +21,7 @@ int sgPos;
 // grip function variable
 Servo sgMyServo;
 int sgClawGripClosed; // to be determined by testing
+int sgClawGripOpen;
 
 //hall effect function varaibles
 int sgMagnetDetectionValue; // to be determined by testing
@@ -33,17 +34,19 @@ int sgPassBackValue; // to be determied by testing
 //ping function variables
 long ul_Echo_Time;
 
-<<<<<<< HEAD
+//<<<<<<< HEAD
 //tail constants
 int degreeOfExtension=45;
 int degreeOfTurn=0;
-=======
+//=======
 //navigation function variables
 int turnNumber=0;
 int width=0;
 int turnCounter=0;
 bool navigate=true;
->>>>>>> origin/master
+int prevTurnCount;
+bool goHome=false;
+//<<<<< origin/master
 
 //Port pin constants
 const int ci_Right_Motor = 8;
@@ -72,7 +75,7 @@ unsigned int ui_Right_Motor_Speed;
 void ScorpionDrive(int leftSpeed, int rightSpeed);
 void clawGrip(int clawHorizontalPin);
 void Survey (long surveyInterval);
-void passBack (int calwVerticalPin);
+void passBack (int clawVerticalPin);// 
 void placement();
 void tailTuck();
 void tailExtend(int degreeOfExtension, int degreeOfTurn); 
@@ -81,14 +84,14 @@ void modeTwoPickUp();
 void modeTwoPlacement();
 void Ping(int Input, int Output);
 bool magnet(int hallEffectPin);
-<<<<<<< HEAD
+//<<<<<<< HEAD
 void turn90L();
 void turn90R(); 
-=======
+//=======
 void navigation();
 void findWidth();
-void findLength();
->>>>>>> origin/master
+void findHome();
+//>>>>>>> origin/master
 
 void setup() {
  
@@ -116,10 +119,10 @@ void setup() {
 
 void loop() {
 
-<<<<<<< HEAD
+//<<<<<<< HEAD
 clawGrip(8); 
 
-=======
+//=======
 // phases, to help with communicatiom
 //change in phase indicates a need for communication
 
@@ -134,14 +137,22 @@ clawGrip(8);
       clawGrip(hallLeftClaw);
    else if(magnet(hallRightClaw))
       clawGrip(hallRightClaw);
-  }
+      navigation = false;
+     }
   //a navigation clause that allows us to enter of exit navigation mode
-  if (navigate == true)
+  if (navigate)
   {
     navigation();
+    prevTurnCount = turnCounter;
+  }
+  else
+  {
+   
+    findHome();
+    
   }
    
->>>>>>> origin/master
+//>>>>>>> origin/master
 }
 
 void ScorpionDrive(int left, int right)
@@ -190,16 +201,16 @@ bool magnet(int hallEffectPin)
     }
     aveRead/=20;
     Serial.println(aveRead);
-    if (aveRead >= sgMagnetDetectionValue)
+    if (aveRead>= sgMagnetDetectionValue)
     {
       navigate = false;
+      foundMagnet = true
       return true;
     }
   else
     return false;
   }
 }
- 
 
 void Ping(int input, int output)
 {
@@ -213,9 +224,9 @@ void Ping(int input, int output)
   ul_Echo_Time = pulseIn(output, HIGH, 10000);
 }
 
-void passBack(int clawVerticalPin)
+void passBack(int clawHorizontalPin)
 {
-  sgMyServo.attach(clawVerticalPin);
+  sgMyServo.attach(clawHorizontalPin);
   sgMyServo.write(sgPassBackValue);
   delay(1000); // I think we can use delay here becasue we wouldn't be navigating
   sgMyServo.detach();
@@ -223,7 +234,7 @@ void passBack(int clawVerticalPin)
 }
 void findWidth()
 {
-  
+  // to get average wdth 
  for (int i=0; i<6;i++)
  {
    Ping(ci_Ultrasonic_Ping_Center,ci_Ultrasonic_Data_Center);
@@ -239,26 +250,67 @@ void findWidth()
 }
 void navigation() 
 {
- // to get average wdth 
- if(!(turnCounter%2))
+ 
+ if(turnCounter%2)
  {
    findWidth();
-   Ping(ci_Ultrasonic_Ping_Center,ci_Ultrasonic_Data_Center);
-   while(ul_Echo_Time/58 > ((width)-(15 + 4*turnCounter)))// the right side of the condition is the width of the subtract the free zone
+   Ping(ci_Ultrasonic_Ping_Center,ci_Ultrasonic_Data_Center);// which ultrasonic? 
+   if(ul_Echo_Time/58 > ((width)-(15 + 4*turnCounter))||ReadLineTracker)// the right side of the condition is the width of the subtract the free zone
    {
    ScorpionDrive(200,200);
    // inlcude break statement if light sensor detected
    }
+   else{
    ScorpionDrive(0,200); // turn 
    turnCounter++;
+   }
  }
- else if (turnCounter%2)
+ else if (!turnCounter%2)
  {
-  
+  Ping(ci_Ultrasonic_Ping_Center,ci_Ultrasonic_Data_Center);
+  if(ul_Echo_Time/58 > 1)// in cm, need better value
+  {
+    ScoripionDrive(200,200);
+ 
+  }
+  else{
+   ScorpionDrive(200,0);// turn(might not be correct)
+   turnCounter++;
+  }
  }
  
+ 
 }
-
+void findHome()
+{
+  if (!turnCounter%2)
+  {
+    Ping(ci_Ultrasonic_Ping_Center,ci_Ultrasonic_Data_Center);
+    while(ul_Echo_Time/58 > 1)
+    {
+      ScoripionDrive(200,200);
+    }
+    //turn left
+    while(ul_Echo_Time/58 > 5)
+    {
+      ScorpionDrive(200,200);
+    }
+    turnCounter=0;
+  }
+ else if (turnCounter%2)
+ {
+   while(ul_Echo_Time/58 > ((width)-(15 + 4*turnCounter))||analogRead(A1)<800)
+   {
+    ScorpionDrive(200,200);
+   }
+   //turnLeft
+   while(ul_Echo_Time/58 > 5)
+    {
+      ScorpionDrive(200,200);
+    }
+    turnCounter =0;
+ }
+}
 void ModeTwoPickUp(){
   Ping();
   if(( ul_Echo_Time <= 10 /**mm**/)&&( ul_Echo_Time>=5)){
