@@ -391,69 +391,83 @@ void findWidth()
 void navigation()
 {
 
+  i  if (returnToNavigation)
+  {
+
+    ScorpionDrive(0, 200);
+    delay(1000);
+    Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
+    while (ul_Echo_Time / 58 > sideDistance) //walk until sideDistance
+    {
+      ScorpionDrive(200, 200);
+    }
+    turnCounter = 0;
+
+  }
+
   if (turnCounter % 2)
   {
     findWidth();
     Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center); // which ultrasonic?
-    if (ul_Echo_Time / 58 > ((width) - (15 + 4 * turnCounter)) || ReadLineTracker) // the right side of the condition is the width of the subtract the free zone
+    if (ul_Echo_Time / 58 > ((width) - (15 + 4 * turnCounter)) || ReadLineTracker()) // the right side of the condition is the width of the subtract the free zone
     {
-      Survey (50);
-      if ((magnet(hallLeftClaw)) || (magnet(hallRightClaw))) {
-        ecRoadMap = 2;
-        break;
-        ScorpionDrive(200, 200);
-        // inlcude break statement if light sensor detected
-      }
-      else {
-        ScorpionDrive(0, 200); // turn
-        turnCounter++;
-      }
+      //sideDistance = Ping(left)
+      ScorpionDrive(200, 200);
+      // inlcude break statement if light sensor detected
     }
-    else if (!turnCounter % 2)
+    else {
+      ScorpionDrive(0, 200); // turn
+      turnCounter++;
+    }
+  }
+  else if (!turnCounter % 2)
+  {
+    Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
+    if (ul_Echo_Time / 58 > 1) // in cm, need better value
     {
-      Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
-      if (ul_Echo_Time / 58 > 1) // in cm, need better value
-      {
-        ScoripionDrive(200, 200);
+      //sideDistance = ping(right);
+      ScorpionDrive(200, 200);
 
-      }
-      else {
-        ScorpionDrive(200, 0); // turn(might not be correct)
-        turnCounter++;
-      }
     }
-
-
+    else {
+      ScorpionDrive(200, 0); // turn(might not be correct)
+      turnCounter++;
+    }
+  }
   }
   void findHome()
   {
-    if (!turnCounter % 2)
+    if (turnCounter % 2)
+    {
+    Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
+    while (ul_Echo_Time / 58 > ((width) - (15 + 4 * turnCounter)) || ReadLineTracker())
     {
       Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
-      while (ul_Echo_Time / 58 > 1)
-      {
-        ScoripionDrive(200, 200);
-      }
-      //turn left
-      while (ul_Echo_Time / 58 > 5)
-      {
-        ScorpionDrive(200, 200);
-      }
-      turnCounter = 0;
+      ScorpionDrive(200, 200);
     }
-    else if (turnCounter % 2)
-    {
-      while (ul_Echo_Time / 58 > ((width) - (15 + 4 * turnCounter)) || analogRead(A1) < 800)
-      {
-        ScorpionDrive(200, 200);
-      }
-      //turnLeft
-      while (ul_Echo_Time / 58 > 5)
-      {
-        ScorpionDrive(200, 200);
-      }
-      turnCounter = 0;
-    }
+    ScorpionDrive(0, 200);
+    delay(1000);
+    ScorpionDrive(0, 200);
+    delay(1000);
+  }
+
+  while (ul_Echo_Time / 58 > 1)
+  { Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
+
+    ScorpionDrive(200, 200);
+  }
+  ScorpionDrive(0, 200);
+  delay(1000);
+  while (ul_Echo_Time / 58 > 5)
+  {
+    ScorpionDrive(200, 200);
+  }
+  ScorpionDrive(0, 200);
+  delay(1000);
+  turnCounter = 0;
+  returnToNavigation = true;
+}
+
   }
   //  void ModeTwoPickUp() {
   //    Ping();
