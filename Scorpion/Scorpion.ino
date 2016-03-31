@@ -50,19 +50,26 @@ int sgPos;
 
 // grip function variable
 Servo sgMyServo;
-int sgClawGripClose; // to be determined by testing
-int ecClawGripOpen; //to be determined by testing
+int ecClawGripOpenL = 180;
+int ecClawGripOpenR = 0;
+int sgClawGripCloseL = 0;
+int sgClawGripCloseR = 130;
 
 //hall effect function varaibles
-int sgMagnetDetectionValue; // to be determined by testing
+int sgMagnetDetectionValueTHigh = 495; // with piston up
+int sgMagnetDetectionValueTLow = 485; // with piston up
+int sgMagnetDetectionValueRHigh = 510;
+int sgMagnetDetectionValueRLow = 505;
+int sgMagnetDetectionValueLHigh=515;
+int sgMagnetDetectionValueLLow=513;
 int count;
 int magnetRead[20];
-bool foundMagnet;
+int aveRead;
+//debugging
+int found;
 
 //PickUpPassBack function variables
-Servo VerticalClawServo;
-int sgPassBackValue; // to be determied by testing
-int ecPickUpValue; //to be determined by testing
+Servo VerticalClawServoL, VerticalClawServoR;
 
 //ping function variables
 long ul_Echo_Time;
@@ -122,8 +129,8 @@ const int ci_RightClawGrip = 10;
 const int ci_LeftClawGrip = 5;
 const int ci_LeftClawVertical = 6;
 const int ci_RightClawVertical = 9;
-const int hallLeftClaw = 5;
-const int hallRightClaw = 0;
+const int hallLeftClaw = A5;
+const int hallRightClaw = A0;
 const int lineTracker = 1;
 
 //Microcontroller 2
@@ -132,7 +139,7 @@ const int TailBase = 9;
 const int TailAppend = 10;
 const int Piston = 5;
 const int PistonExtend = 3;
-const int TailHall = 5;
+const int TailHall = A5;
 const int LineTrack = 3; 
 
 //motor speed vairables
@@ -148,9 +155,8 @@ void ScorpionDrive(int leftSpeed, int rightSpeed);
 void clawGripOpen(int clawHorizontalPin);
 void clawGripClose(int clawHorizontalPin);
 void Survey (long surveyInterval);
-void PickUpPassBack(int clawVerticalPin, int clawHorizontalPin);
+void PickUpPassBack(int clawVerticalPin, int clawGripPin);
 void placement();
-void tailTuck();
 void tailExtend(int degreeOfExtension, int degreeOfTurn);
 void modeTwoPickUp();
 void modeTwoPlacement();
@@ -163,10 +169,10 @@ void turn90R();
 void findWidth();
 void findLength();
 void findHome();
-void DropMagnet(); //NEED TO BE WRITTEN
-void PickUpMagnet(); //NEED TO BE WRITTEN
+void DropMagnet();
+void PickUpMagnet();
 void angleMagnet(int angleMag); //NEED TO BE WRITTEN
-bool readLineTracker(int lineTrackerPin);
+bool readLineTracker(int lineTrackerPin);//NEEDS TO BE WRITTEN
 void allignWithBase(); //NEED TO BE WRITTEN
 void GoBackToTrack(); //NEED TO BE WRITTEN
 
@@ -184,15 +190,19 @@ void setup() {
   pinMode(ci_Left_Motor, OUTPUT);
   servo_LeftMotor.attach(ci_Left_Motor);
 
-  //set up claw servos
+  //set up Horizontal Claw servos
   pinMode(ci_RightClawHorizontal, OUTPUT);
   servo_RightClawHorizontal.attach(ci_RightClawHorizontal);
   pinMode(ci_LeftClawHorizontal, OUTPUT);
   servo_LeftClawHorizontal.attach(ci_LeftClawHorizontal);
   
-  //set up open close servos
+  //set up Grip Claw servos
   pinMode(ci_LeftClawGrip, OUTPUT);
   pinMode(ci_RightClawGrip, OUTPUT); 
+
+  //Set up Vertical Claw Servos
+  pinMode(ci_LeftClawVertical, OUTPUT);
+  pinMode(ci_RightClawVertical, OUTPUT);
 
   // set up ultrasonic
   pinMode(ci_Ultrasonic_Ping_Center, OUTPUT);
@@ -205,6 +215,8 @@ void setup() {
   //set up hall sensors
   pinMode(hallLeftClaw, INPUT);
   pinMode(hallRightClaw, INPUT);
+
+  Serial.begin(9600); 
 
 }
 
@@ -299,22 +311,57 @@ void ScorpionDrive(int left, int right)
   servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed);
 }
 
-void clawGripOpen(int clawHorizontalPin)
+void clawGripOpen(int clawGripPin)
 {
-  sgMyServo.attach(clawHorizontalPin);
-  sgMyServo.write(ecClawGripOpen);
+  sgMyServo.attach(clawGripPin);
+  if (clawGripPin == ci_RightClawGrip)
+    sgMyServo.write(ecClawGripOpenR);
+  else
+    sgMyServo.write(ecClawGripOpenL);
   delay(1000);
   sgMyServo.detach();
 }
 
-void clawGripClose(int clawHorizontalPin)
+void clawGripClose(int clawGripPin)
 {
-  sgMyServo.attach(clawHorizontalPin);
-  sgMyServo.write(sgClawGripClose);
+  sgMyServo.attach(clawGripPin);
+  if (clawGripPin == ci_RightClawGrip)
+    sgMyServo.write(sgClawGripCloseR);
+  else
+    sgMyServo.write(sgClawGripCloseL);
   delay(1000);
   sgMyServo.detach();
 }
 
+void PickUpPassBack(int clawVerticalPin, int clawGripPin)
+{
+  if (clawGripPin == ci_RightClawGrip) {
+    VerticalClawServoR.attach(clawVerticalPin);
+    for (int pos = 180; pos >= 145; pos -= 1) { 
+    VerticalClawServoR.write(pos);             
+    delay(20);                     
+    }
+    clawGripOpen(clawGripPin);
+    clawGripClose(clawGripPin);
+    for (int pos = 140; pos <= 180; pos += 1) { 
+    VerticalClawServoR.write(pos);              
+    delay(20);                       
+    }
+  }
+  else {
+    VerticalClawServoL.attach(clawVerticalPin);
+    for (int pos = 180; pos >= 145; pos -= 1) { 
+    VerticalClawServoL.write(pos);             
+    delay(20);                     
+    }
+    clawGripOpen(clawGripPin);
+    clawGripClose(clawGripPin);
+    for (int pos = 140; pos <= 180; pos += 1) { 
+    VerticalClawServoL.write(pos);              
+    delay(20);                       
+    }
+  }
+}
 void Survey(long surveyInterval)
 {
   if ((millis() - sgSurveyPrevTime) >= surveyInterval) // how fast it sweeps back and forth
@@ -349,20 +396,40 @@ bool magnet(int hallEffectPin)
   if (count == 20)
   {
     count = 0;
-    int aveRead = 0;
+    aveRead = 0;
     for (int i = 0; i < 21; i++) {
       aveRead += magnetRead[i];
     }
     aveRead /= 20;
-    Serial.println(aveRead);
-    if (aveRead >= sgMagnetDetectionValue)
+    //Serial.println(aveRead); //debugging
+    int sgMagnetDetectionValueHigh, sgMagnetDetectionValueLow;
+    // this series of if statements indicate which values to use for magnet detection
+    if (hallEffectPin == hallRightClaw)
     {
-      navigate = false;
-      foundMagnet = true;
+      sgMagnetDetectionValueHigh = sgMagnetDetectionValueRHigh;
+      sgMagnetDetectionValueLow = sgMagnetDetectionValueRLow;
+    }
+    else if (hallEffectPin == hallLeftClaw)
+    {
+      sgMagnetDetectionValueHigh = sgMagnetDetectionValueLHigh;
+      sgMagnetDetectionValueLow = sgMagnetDetectionValueLLow;
+    }
+    else 
+    {
+      sgMagnetDetectionValueHigh = sgMagnetDetectionValueTHigh;
+      sgMagnetDetectionValueLow = sgMagnetDetectionValueTLow;
+    }
+    // return true if magnet is found, else returns false
+    if (aveRead >= sgMagnetDetectionValueHigh || aveRead <= sgMagnetDetectionValueLow)
+    {
+      found = 1;// debugging
       return true;
     }
     else
+    {
+      found = 0;//debugging
       return false;
+    }
   }
 }
 
@@ -378,15 +445,6 @@ void Ping(int input, int output)
   ul_Echo_Time = pulseIn(output, HIGH, 10000);
 }
 
-void PickUpPassBack(int clawVerticalPin, int clawHorizontalPin)
-{
-  sgMyServo.attach(clawVerticalPin);
-  sgMyServo.write(ecPickUpValue);
-  delay(1000);
-  clawGripOpen(clawHorizontalPin);
-  clawGripClose(clawHorizontalPin);
-  delay(1000);
-}
 void findWidth()
 {
 
@@ -406,41 +464,42 @@ void findWidth()
 
 void navigation()
 {
-
-  if (turnCounter % 2)
-  {
-    findWidth();
-    Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center); // which ultrasonic?
-    if (ul_Echo_Time / 58 > ((width) - (15 + 4 * turnCounter)) || ReadLineTracker) // the right side of the condition is the width of the subtract the free zone
-    {
-      Survey (50);
-      if ((magnet(hallLeftClaw)) || (magnet(hallRightClaw))) {
-        ecRoadMap = 2;
-        break;
-        ScorpionDrive(200, 200);
-        // inlcude break statement if light sensor detected
-      }
-      else {
-        ScorpionDrive(0, 200); // turn
-        turnCounter++;
-      }
-    }
-    else if (!turnCounter % 2)
-    {
-      Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
-      if (ul_Echo_Time / 58 > 1) // in cm, need better value
-      {
-        ScoripionDrive(200, 200);
-
-      }
-      else {
-        ScorpionDrive(200, 0); // turn(might not be correct)
-        turnCounter++;
-      }
-    }
+//
+//  if (turnCounter % 2)
+//  {
+//    findWidth();
+//    Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center); // which ultrasonic?
+//    if (ul_Echo_Time / 58 > ((width) - (15 + 4 * turnCounter)) || ReadLineTracker) // the right side of the condition is the width of the subtract the free zone
+//    {
+//      Survey (50);
+//      if ((magnet(hallLeftClaw)) || (magnet(hallRightClaw))) {
+//        ecRoadMap = 2;
+//        break;
+//        ScorpionDrive(200, 200);
+//        // inlcude break statement if light sensor detected
+//      }
+//      else {
+//        ScorpionDrive(0, 200); // turn
+//        turnCounter++;
+//      }
+//    }
+//    else if (!turnCounter % 2)
+//    {
+//      Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
+//      if (ul_Echo_Time / 58 > 1) // in cm, need better value
+//      {
+//        ScoripionDrive(200, 200);
+//
+//      }
+//      else {
+//        ScorpionDrive(200, 0); // turn(might not be correct)
+//        turnCounter++;
+//      }
+//    }
 
 
   }
+
   void findHome()
   {
     if (!turnCounter % 2)
@@ -448,7 +507,7 @@ void navigation()
       Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
       while (ul_Echo_Time / 58 > 1)
       {
-        ScoripionDrive(200, 200);
+        ScorpionDrive(200, 200);
       }
       //turn left
       while (ul_Echo_Time / 58 > 5)
@@ -509,12 +568,12 @@ void navigation()
     }
     else if ((ecTessPlaceL > 0) && (ecTessPlaceR == 0)) {
       servo_LeftClawHorizontal.write(ecTessPlaceL);
-      PickUpPassBack(ci_LeftClawVertical, ci_LeftClawHorizontal);
+      PickUpPassBack(ci_LeftClawVertical, ci_LeftClawGrip);
       ecRoadMap = 3;
     }
     else if ((ecTessPlaceR > 0) && (ecTessPlaceL == 0)) {
       servo_RightClawHorizontal.write(ecTessPlaceR);
-      PickUpPassBack(ci_RightClawVertical, ci_RightClawHorizontal);
+      PickUpPassBack(ci_RightClawVertical, ci_RightClawGrip);
       ecRoadMap = 3;
     }
   }
@@ -588,41 +647,9 @@ void navigation()
     servo_PistonExtend.write(angleMag);
   }
 
-
-  //void ModeTwoPickUp(){
-  //  Ping();
-  //  if(( ul_Echo_Time <= 10 /**mm**/)&&( ul_Echo_Time>=5)){
-  //    ScorpionDrive (1500, 1500);
-  //    tailExtend(degreeOfExtension, degreeOfTurn); //guess need to know actual value (extends to 45 and looks at position
-  //    if(magnet(hallEffectPin)==true){ //NEED PIN NUMBER***********************************************************************
-  //    magnet(); //picks up cube
-  //      tailTuck(); //tucks the tail
-  //    }
-  //    else{
-  //      if (degreeOfTurn <=90){
-  //      degreeOfTurn = degreeOfTurn + 90;
-  //      ModeTwoPickUp();
-  //      }
-  //      else{
-  //      degreeOfTurn = 0; ///MIGHT NEED TO WATCH OUT FOR BOT PLACING CUBE******************************************************
-  //      ModeTwoPickUp();
-  //      }
-  //    }
-  //  }
-  //  else {
-  //    ScorpionDrive(1800, 1800);
-  //  }
-  //}
-  //
-  //void modeTwoPlacement(){
-  // Ping();
-  //  if(ul_Echo_Time >= 10 /**mm**/) //NEED ACTUAL DISTANCE AWAY*************************************************************
-  //  {
-  //    turn90R();
-  //    ScorpionDrive(1800, 1800);
-  //    if (//Time)
-  //  }
-  //}
+bool readLineTracker(int lineTrackerPin){}
+void allignWithBase(){}
+void GoBackToTrack(){}
 
 
 
