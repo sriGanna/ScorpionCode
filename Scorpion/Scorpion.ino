@@ -60,6 +60,7 @@ int magnetRead[20];
 bool foundMagnet;
 
 //PickUpPassBack function variables
+Servo VerticalClawServo;
 int sgPassBackValue; // to be determied by testing
 int ecPickUpValue; //to be determined by testing
 
@@ -108,24 +109,31 @@ bool navigate = true;
 int prevTurnCount;
 bool goHome = false;
 
-//Port pin constants
-const int ci_Right_Motor = 8;
-const int ci_Left_Motor = 9;
-const int ci_Ultrasonic_Ping_Center = 2;   //input plug
-const int ci_Ultrasonic_Data_Center = 3;   //output plug
-const int ci_Ultrasonic_Left = 5;
-const int ci_Ultrasonic_Right = 6;
-const int ci_RightClawHorizontal = 6;
+//Port pin constants Microcontroller 1
+const int ci_Right_Motor = 11;
+const int ci_Left_Motor = 2;
+const int ci_Ultrasonic_Ping_Center = 3;   //input plug
+const int ci_Ultrasonic_Data_Center = 13;   //output plug
+const int ci_Ultrasonic_Left = 4;
+const int ci_Ultrasonic_Right = 12;
+const int ci_RightClawHorizontal = 8;
 const int ci_LeftClawHorizontal = 7;
-const int ci_RightClawGrip = 0;
-const int ci_LeftClawGrip = 0;
-const int ci_LeftClawVertical = 0;
-const int ci_RightClawVertical = 0;
-const int hallLeftClaw = 4;
-const int hallRightClaw = 2;
-const int lineTracker = 0;
+const int ci_RightClawGrip = 10;
+const int ci_LeftClawGrip = 5;
+const int ci_LeftClawVertical = 6;
+const int ci_RightClawVertical = 9;
+const int hallLeftClaw = 5;
+const int hallRightClaw = 0;
+const int lineTracker = 1;
+
+//Microcontroller 2
+const int TailRot = 11;
+const int TailBase = 9;
+const int TailAppend = 10;
 const int Piston = 5;
 const int PistonExtend = 3;
+const int TailHall = 5;
+const int LineTrack = 3; 
 
 //motor speed vairables
 const int ci_Left_Motor_Stop = 1500;        // 200 for brake mode; 1500 for stop
@@ -144,7 +152,6 @@ void PickUpPassBack(int clawVerticalPin, int clawHorizontalPin);
 void placement();
 void tailTuck();
 void tailExtend(int degreeOfExtension, int degreeOfTurn);
-bool magnet();
 void modeTwoPickUp();
 void modeTwoPlacement();
 void Ping(int Input, int Output);
@@ -162,6 +169,7 @@ void angleMagnet(int angleMag); //NEED TO BE WRITTEN
 bool readLineTracker(int lineTrackerPin);
 void allignWithBase(); //NEED TO BE WRITTEN
 void GoBackToTrack(); //NEED TO BE WRITTEN
+
 void setup() {
 
   //piston magnet device
@@ -176,11 +184,15 @@ void setup() {
   pinMode(ci_Left_Motor, OUTPUT);
   servo_LeftMotor.attach(ci_Left_Motor);
 
-  //set up claw motors
+  //set up claw servos
   pinMode(ci_RightClawHorizontal, OUTPUT);
-  servo_RightMotor.attach(ci_RightClawHorizontal);
+  servo_RightClawHorizontal.attach(ci_RightClawHorizontal);
   pinMode(ci_LeftClawHorizontal, OUTPUT);
-  servo_LeftMotor.attach(ci_LeftClawHorizontal);
+  servo_LeftClawHorizontal.attach(ci_LeftClawHorizontal);
+  
+  //set up open close servos
+  pinMode(ci_LeftClawGrip, OUTPUT);
+  pinMode(ci_RightClawGrip, OUTPUT); 
 
   // set up ultrasonic
   pinMode(ci_Ultrasonic_Ping_Center, OUTPUT);
@@ -189,6 +201,10 @@ void setup() {
   pinMode(ci_Ultrasonic_Left, INPUT);
   pinMode(ci_Ultrasonic_Right, OUTPUT);
   pinMode(ci_Ultrasonic_Right, INPUT);
+  
+  //set up hall sensors
+  pinMode(hallLeftClaw, INPUT);
+  pinMode(hallRightClaw, INPUT);
 
 }
 
