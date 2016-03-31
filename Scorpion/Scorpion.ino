@@ -62,8 +62,13 @@ int sgPos;
 
 // grip function variable
 Servo sgMyServo;
+<<<<<<< HEAD
 int sgClawGripClose; // to be determined by testing
 int ecClawGripOpen; //to be determined by testing
+=======
+int sgClawGripClosed; // to be determined by testing
+int sgClawGripOpen;
+>>>>>>> origin/master
 
 //hall effect function varaibles
 int sgMagnetDetectionValue; // to be determined by testing
@@ -77,6 +82,7 @@ int ecPickUpValue; //to be determined by testing
 //ping function variables
 long ul_Echo_Time;
 
+<<<<<<< HEAD
 //DetectionPlace Function Variables
 int ecdSearch = 0;
 int ecTessPlaceL = 0;
@@ -104,6 +110,21 @@ int width = 0;
 int turnCounter = 0;
 bool navigate = true;
 //>>>>>>> origin/master
+=======
+//<<<<<<< HEAD
+//tail constants
+int degreeOfExtension=45;
+int degreeOfTurn=0;
+//=======
+//navigation function variables
+int turnNumber=0;
+int width=0;
+int turnCounter=0;
+bool navigate=true;
+int prevTurnCount;
+bool goHome=false;
+//<<<<< origin/master
+>>>>>>> origin/master
 
 //Port pin constants
 const int ci_Right_Motor = 8;
@@ -136,7 +157,11 @@ void ScorpionDrive(int leftSpeed, int rightSpeed);
 void clawGripOpen(int clawHorizontalPin);
 void clawGripClose(int clawHorizontalPin);
 void Survey (long surveyInterval);
+<<<<<<< HEAD
 void PickUpPassBack(int clawVerticalPin, int clawHorizontalPin);
+=======
+void passBack (int clawVerticalPin);// 
+>>>>>>> origin/master
 void placement();
 void tailTuck();
 void tailExtend(int degreeOfExtension, int degreeOfTurn);
@@ -145,6 +170,7 @@ void modeTwoPickUp();
 void modeTwoPlacement();
 void Ping(int Input, int Output);
 bool magnet(int hallEffectPin);
+<<<<<<< HEAD
 void DetectionPlace();
 void navigation();
 //<<<<<<< HEAD
@@ -154,6 +180,15 @@ void turn90R();
 void navigation();
 void findWidth();
 void findLength();
+=======
+//<<<<<<< HEAD
+void turn90L();
+void turn90R(); 
+//=======
+void navigation();
+void findWidth();
+void findHome();
+>>>>>>> origin/master
 //>>>>>>> origin/master
 
 void setup() {
@@ -182,6 +217,7 @@ void setup() {
 
 void loop() {
 
+<<<<<<< HEAD
   //<<<<<<< HEAD
   //clawGrip(8);
   //
@@ -208,10 +244,19 @@ void loop() {
   //  }
   //
   //>>>>>>> origin/master
+=======
+//<<<<<<< HEAD
+clawGrip(8); 
+
+//=======
+// phases, to help with communicatiom
+//change in phase indicates a need for communication
+>>>>>>> origin/master
 
   if (ecRoadMap == 1) {
     navigation();
   }
+<<<<<<< HEAD
   else if (ecRoadMap == 2) {
     if (ecdSearch == 0) {
       ScorpionDrive(0, 0); //stops bot
@@ -255,6 +300,30 @@ void loop() {
 
 
   }
+=======
+  else // will stop and determine which claw needs to capture the tesseract
+  {
+    if(magnet(hallLeftClaw))
+      clawGrip(hallLeftClaw);
+   else if(magnet(hallRightClaw))
+      clawGrip(hallRightClaw);
+      navigation = false;
+     }
+  //a navigation clause that allows us to enter of exit navigation mode
+  if (navigate)
+  {
+    navigation();
+    prevTurnCount = turnCounter;
+  }
+  else
+  {
+   
+    findHome();
+    
+  }
+   
+//>>>>>>> origin/master
+>>>>>>> origin/master
 }
 
 void ScorpionDrive(int left, int right)
@@ -321,16 +390,20 @@ bool magnet(int hallEffectPin)
     }
     aveRead /= 20;
     Serial.println(aveRead);
-    if (aveRead >= sgMagnetDetectionValue)
+    if (aveRead>= sgMagnetDetectionValue)
     {
       navigate = false;
+      foundMagnet = true
       return true;
     }
     else
       return false;
   }
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/master
 
 void Ping(int input, int output)
 {
@@ -344,6 +417,7 @@ void Ping(int input, int output)
   ul_Echo_Time = pulseIn(output, HIGH, 10000);
 }
 
+<<<<<<< HEAD
 void PickUpPassBack(int clawVerticalPin, int clawHorizontalPin)
 {
   sgMyServo.attach(clawVerticalPin);
@@ -352,6 +426,11 @@ void PickUpPassBack(int clawVerticalPin, int clawHorizontalPin)
   clawGripOpen(clawHorizontalPin);
   clawGripClose(clawHorizontalPin);
   delay(1000);
+=======
+void passBack(int clawHorizontalPin)
+{
+  sgMyServo.attach(clawHorizontalPin);
+>>>>>>> origin/master
   sgMyServo.write(sgPassBackValue);
   delay(1000); // I think we can use delay here becasue we wouldn't be navigating
   sgMyServo.detach();
@@ -359,6 +438,7 @@ void PickUpPassBack(int clawVerticalPin, int clawHorizontalPin)
 }
 void findWidth()
 {
+<<<<<<< HEAD
 
   for (int i = 0; i < 6; i++)
   {
@@ -385,6 +465,102 @@ void navigation() {
       if ((magnet(hallLeftClaw)) || (magnet(hallRightClaw))) {
         ecRoadMap = 2;
         break;
+=======
+  // to get average wdth 
+ for (int i=0; i<6;i++)
+ {
+   Ping(ci_Ultrasonic_Ping_Center,ci_Ultrasonic_Data_Center);
+   if (ul_Echo_Time == 0)
+   {
+    i--;
+   }
+   width += ul_Echo_Time/58;
+   }
+   
+ width = width/10;
+    
+}
+void navigation() 
+{
+ 
+ if(turnCounter%2)
+ {
+   findWidth();
+   Ping(ci_Ultrasonic_Ping_Center,ci_Ultrasonic_Data_Center);// which ultrasonic? 
+   if(ul_Echo_Time/58 > ((width)-(15 + 4*turnCounter))||ReadLineTracker)// the right side of the condition is the width of the subtract the free zone
+   {
+   ScorpionDrive(200,200);
+   // inlcude break statement if light sensor detected
+   }
+   else{
+   ScorpionDrive(0,200); // turn 
+   turnCounter++;
+   }
+ }
+ else if (!turnCounter%2)
+ {
+  Ping(ci_Ultrasonic_Ping_Center,ci_Ultrasonic_Data_Center);
+  if(ul_Echo_Time/58 > 1)// in cm, need better value
+  {
+    ScoripionDrive(200,200);
+ 
+  }
+  else{
+   ScorpionDrive(200,0);// turn(might not be correct)
+   turnCounter++;
+  }
+ }
+ 
+ 
+}
+void findHome()
+{
+  if (!turnCounter%2)
+  {
+    Ping(ci_Ultrasonic_Ping_Center,ci_Ultrasonic_Data_Center);
+    while(ul_Echo_Time/58 > 1)
+    {
+      ScoripionDrive(200,200);
+    }
+    //turn left
+    while(ul_Echo_Time/58 > 5)
+    {
+      ScorpionDrive(200,200);
+    }
+    turnCounter=0;
+  }
+ else if (turnCounter%2)
+ {
+   while(ul_Echo_Time/58 > ((width)-(15 + 4*turnCounter))||analogRead(A1)<800)
+   {
+    ScorpionDrive(200,200);
+   }
+   //turnLeft
+   while(ul_Echo_Time/58 > 5)
+    {
+      ScorpionDrive(200,200);
+    }
+    turnCounter =0;
+ }
+}
+void ModeTwoPickUp(){
+  Ping();
+  if(( ul_Echo_Time <= 10 /**mm**/)&&( ul_Echo_Time>=5)){
+    ScorpionDrive (1500, 1500);
+    tailExtend(degreeOfExtension, degreeOfTurn); //guess need to know actual value (extends to 45 and looks at position
+    if(magnet(hallEffectPin)==true){ //NEED PIN NUMBER***********************************************************************
+    magnet(); //picks up cube
+      tailTuck(); //tucks the tail
+    } 
+    else{
+      if (degreeOfTurn <=90){
+      degreeOfTurn = degreeOfTurn + 90;
+      ModeTwoPickUp(); 
+      }
+      else{
+      degreeOfTurn = 0; ///MIGHT NEED TO WATCH OUT FOR BOT PLACING CUBE******************************************************
+      ModeTwoPickUp(); 
+>>>>>>> origin/master
       }
       ScorpionDrive(200, 200);
       // inlcude break statement if light sensor detected
