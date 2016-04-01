@@ -1,3 +1,19 @@
+Skip to content
+This repository
+Search
+Pull requests
+Issues
+Gist
+ @sriGanna
+ Unwatch 4
+  Star 0
+ Fork 0 sriGanna/ScorpionCode PRIVATE
+ Code  Issues 0  Pull requests 0  Wiki  Pulse  Graphs  Settings
+Branch: master Find file Copy pathScorpionCode/Scorpion/Scorpion.ino
+dc55540  2 hours ago
+@sriGanna sriGanna navigation + find home function
+4 contributors @sgannav @ecook29 @kmstumpf @sriGanna
+RawBlameHistory     628 lines (561 sloc)  16.8 KB
 
 //libraries
 #include <Servo.h>
@@ -463,6 +479,7 @@ void findWidth()
 
 void navigation()
 {
+<<<<<<< HEAD
 //
 //  if (turnCounter % 2)
 //  {
@@ -497,12 +514,59 @@ void navigation()
 //    }
 
 
+=======
+
+  i  if (returnToNavigation)
+  {
+
+    ScorpionDrive(0, 200);
+    delay(1000);
+    Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
+    while (ul_Echo_Time / 58 > sideDistance) //walk until sideDistance
+    {
+      ScorpionDrive(200, 200);
+    }
+    turnCounter = 0;
+
+  }
+
+  if (turnCounter % 2)
+  {
+    findWidth();
+    Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center); // which ultrasonic?
+    if (ul_Echo_Time / 58 > ((width) - (15 + 4 * turnCounter)) || ReadLineTracker()) // the right side of the condition is the width of the subtract the free zone
+    {
+      //sideDistance = Ping(left)
+      ScorpionDrive(200, 200);
+      // inlcude break statement if light sensor detected
+    }
+    else {
+      ScorpionDrive(0, 200); // turn
+      turnCounter++;
+    }
+  }
+  else if (!turnCounter % 2)
+  {
+    Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
+    if (ul_Echo_Time / 58 > 1) // in cm, need better value
+    {
+      //sideDistance = ping(right);
+      ScorpionDrive(200, 200);
+
+    }
+    else {
+      ScorpionDrive(200, 0); // turn(might not be correct)
+      turnCounter++;
+    }
+  }
+>>>>>>> origin/master
   }
 
   void findHome()
   {
-    if (!turnCounter % 2)
+    if (turnCounter % 2)
     {
+<<<<<<< HEAD
       Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
       while (ul_Echo_Time / 58 > 1)
       {
@@ -516,18 +580,37 @@ void navigation()
       turnCounter = 0;
     }
     else if (turnCounter % 2)
+=======
+    Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
+    while (ul_Echo_Time / 58 > ((width) - (15 + 4 * turnCounter)) || ReadLineTracker())
+>>>>>>> origin/master
     {
-      while (ul_Echo_Time / 58 > ((width) - (15 + 4 * turnCounter)) || analogRead(A1) < 800)
-      {
-        ScorpionDrive(200, 200);
-      }
-      //turnLeft
-      while (ul_Echo_Time / 58 > 5)
-      {
-        ScorpionDrive(200, 200);
-      }
-      turnCounter = 0;
+      Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
+      ScorpionDrive(200, 200);
     }
+    ScorpionDrive(0, 200);
+    delay(1000);
+    ScorpionDrive(0, 200);
+    delay(1000);
+  }
+
+  while (ul_Echo_Time / 58 > 1)
+  { Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
+
+    ScorpionDrive(200, 200);
+  }
+  ScorpionDrive(0, 200);
+  delay(1000);
+  while (ul_Echo_Time / 58 > 5)
+  {
+    ScorpionDrive(200, 200);
+  }
+  ScorpionDrive(0, 200);
+  delay(1000);
+  turnCounter = 0;
+  returnToNavigation = true;
+}
+
   }
   //  void ModeTwoPickUp() {
   //    Ping();
@@ -668,3 +751,5 @@ void GoBackToTrack(){}
 
 
 
+Status API Training Shop Blog About
+© 2016 GitHub, Inc. Terms Privacy Security Contact Help
