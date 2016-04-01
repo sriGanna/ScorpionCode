@@ -61,8 +61,8 @@ int sgMagnetDetectionValueTHigh = 495; // with piston up
 int sgMagnetDetectionValueTLow = 485; // with piston up
 int sgMagnetDetectionValueRHigh = 510;
 int sgMagnetDetectionValueRLow = 505;
-int sgMagnetDetectionValueLHigh=515;
-int sgMagnetDetectionValueLLow=513;
+int sgMagnetDetectionValueLHigh = 515;
+int sgMagnetDetectionValueLLow = 513;
 int count;
 int magnetRead[20];
 int aveRead;
@@ -144,7 +144,7 @@ const int TailAppend = 10;
 const int Piston = 5;
 const int PistonExtend = 3;
 const int TailHall = A5;
-const int topLineTracker = 3; 
+const int topLineTracker = 3;
 
 //motor speed vairables
 const int ci_Left_Motor_Stop = 1500;        // 200 for brake mode; 1500 for stop
@@ -196,10 +196,10 @@ void setup() {
   servo_RightClawHorizontal.attach(ci_RightClawHorizontal);
   pinMode(ci_LeftClawHorizontal, OUTPUT);
   servo_LeftClawHorizontal.attach(ci_LeftClawHorizontal);
-  
+
   //set up Grip Claw servos
   pinMode(ci_LeftClawGrip, OUTPUT);
-  pinMode(ci_RightClawGrip, OUTPUT); 
+  pinMode(ci_RightClawGrip, OUTPUT);
 
   //Set up Vertical Claw Servos
   pinMode(ci_LeftClawVertical, OUTPUT);
@@ -208,16 +208,12 @@ void setup() {
   // set up ultrasonic
   pinMode(ci_Ultrasonic_Ping_Center, OUTPUT);
   pinMode(ci_Ultrasonic_Data_Center, INPUT);
-  pinMode(ci_Ultrasonic_Left, OUTPUT);
-  pinMode(ci_Ultrasonic_Left, INPUT);
-  pinMode(ci_Ultrasonic_Right, OUTPUT);
-  pinMode(ci_Ultrasonic_Right, INPUT);
-  
+
   //set up hall sensors
   pinMode(hallLeftClaw, INPUT);
   pinMode(hallRightClaw, INPUT);
 
-  Serial.begin(9600); 
+  Serial.begin(9600);
 
 }
 
@@ -337,28 +333,28 @@ void PickUpPassBack(int clawVerticalPin, int clawGripPin)
 {
   if (clawGripPin == ci_RightClawGrip) {
     VerticalClawServoR.attach(clawVerticalPin);
-    for (int pos = 180; pos >= 145; pos -= 1) { 
-    VerticalClawServoR.write(pos);             
-    delay(20);                     
+    for (int pos = 180; pos >= 145; pos -= 1) {
+      VerticalClawServoR.write(pos);
+      delay(20);
     }
     clawGripOpen(clawGripPin);
     clawGripClose(clawGripPin);
-    for (int pos = 140; pos <= 180; pos += 1) { 
-    VerticalClawServoR.write(pos);              
-    delay(20);                       
+    for (int pos = 140; pos <= 180; pos += 1) {
+      VerticalClawServoR.write(pos);
+      delay(20);
     }
   }
   else {
     VerticalClawServoL.attach(clawVerticalPin);
-    for (int pos = 180; pos >= 145; pos -= 1) { 
-    VerticalClawServoL.write(pos);             
-    delay(20);                     
+    for (int pos = 180; pos >= 145; pos -= 1) {
+      VerticalClawServoL.write(pos);
+      delay(20);
     }
     clawGripOpen(clawGripPin);
     clawGripClose(clawGripPin);
-    for (int pos = 140; pos <= 180; pos += 1) { 
-    VerticalClawServoL.write(pos);              
-    delay(20);                       
+    for (int pos = 140; pos <= 180; pos += 1) {
+      VerticalClawServoL.write(pos);
+      delay(20);
     }
   }
 }
@@ -414,13 +410,13 @@ bool magnet(int hallEffectPin)
       sgMagnetDetectionValueHigh = sgMagnetDetectionValueLHigh;
       sgMagnetDetectionValueLow = sgMagnetDetectionValueLLow;
     }
-    else 
+    else
     {
       sgMagnetDetectionValueHigh = sgMagnetDetectionValueTHigh;
       sgMagnetDetectionValueLow = sgMagnetDetectionValueTLow;
     }
     // return true if magnet is found, else returns false
-    if (aveRead >= sgMagnetDetectionValueHigh || aveRead <= sgMagnetDetectionValueLow)
+    if ((aveRead >= sgMagnetDetectionValueHigh) || (aveRead <= sgMagnetDetectionValueLow))
     {
       found = 1;// debugging
       return true;
@@ -433,301 +429,350 @@ bool magnet(int hallEffectPin)
   }
 }
 
-void Ping(int input, int output)
+long sidePing(int sideUltrasonicPin)
 {
-  //Ping Ultrasonic
-  //Send the Ultrasonic Range Finder a 10 microsecond pulse per tech spec
-  digitalWrite(input, HIGH);
-  delayMicroseconds(10);  //The 10 microsecond pause where the pulse in "high"
-  digitalWrite(input, LOW);
-  //use command pulseIn to listen to Ultrasonic_Data pin to record the
-  //time that it takes from when the Pin goes HIGH until it goes LOW
-  ul_Echo_Time = pulseIn(output, HIGH, 10000);
+  pinMode(sideUltrasonicPin, OUTPUT);
+  digitalWrite(sideUltrasonicPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(sideUltrasonicPin, HIGH);
+  delayMicroseconds(5);
+  digitalWrite(sideUltrasonicPin, LOW);
+
+  // The same pin is used to read the signal from the PING))): a HIGH
+  // pulse whose duration is the time (in microseconds) from the sending
+  // of the ping to the reception of its echo off of an object.
+  pinMode(sideUltrasonicPin, INPUT);
+  duration = pulseIn(sideUltrasonicPin, HIGH);
+  delay (5);
+  duration /= 58;
+  return duration; //returns the distance in mm
+}
+
+void centerPing()
+{
+  for (int i = 0; i < 50; i++) {
+    pinMode(ci_UltrasonicCenterInput, OUTPUT);
+    pinMode(ci_UltrasonicCenterOutput, INPUT);
+    //Send the Ultrasonic Range Finder a 10 microsecond pulse per tech spec
+    digitalWrite(ci_UltrasonicCenterInput, HIGH);
+    delayMicroseconds(50);  //The 10 microsecond pause where the pulse in "high"
+    digitalWrite(ci_UltrasonicCenterInput, LOW);
+    //use command pulseIn to listen to Ultrasonic_Data pin to record the
+    //time that it takes from when the Pin goes HIGH until it goes LOW
+    int dist = pulseIn(ci_UltrasonicCenterOutput, HIGH, 10000) / 58;
+    if (dist)
+      ksFrontDistance += dist; //sets ksFrontDistance in mm
+    else
+      i--;
+
+  }
+  if (ksFrontDistance)
+    ksFrontDistance = ksFrontDistance / 50 ;
 }
 
 void findWidth()
 {
-
-  for (int i = 0; i < 6; i++)
+  // to get average wdth
+  int i;
+  for ( i = 0; i < 6; i++)
   {
-    Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
-    if (ul_Echo_Time == 0)
+    if (ksFrontDistance == 0)
     {
-      i--;
+      i--
     }
-    width += ul_Echo_Time / 58;
+    centerPing();
+    width += ksFrontDistance;
   }
 
-  width = width / 10;
+  width = width / (i * 2); // dividing by two becasue we want half the cage as width
+  width = width - (15);
 
 }
 
 void navigation()
 {
-//<<<<<<< HEAD
-//
-//  if (turnCounter % 2)
-//  {
-//    findWidth();
-//    Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center); // which ultrasonic?
-//    if (ul_Echo_Time / 58 > ((width) - (15 + 4 * turnCounter)) || ReadLineTracker) // the right side of the condition is the width of the subtract the free zone
-//    {
-//      Survey (50);
-//      if ((magnet(hallLeftClaw)) || (magnet(hallRightClaw))) {
-//        ecRoadMap = 2;
-//        break;
-//        ScorpionDrive(200, 200);
-//        // inlcude break statement if light sensor detected
-//      }
-//      else {
-//        ScorpionDrive(0, 200); // turn
-//        turnCounter++;
-//      }
-//    }
-//    else if (!turnCounter % 2)
-//    {
-//      Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
-//      if (ul_Echo_Time / 58 > 1) // in cm, need better value
-//      {
-//        ScoripionDrive(200, 200);
-//
-//      }
-//      else {
-//        ScorpionDrive(200, 0); // turn(might not be correct)
-//        turnCounter++;
-//      }
-//    }
-
-
-//=======
-
-
-  if (turnCounter % 2)
-  {
-    findWidth();
-    Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center); // which ultrasonic?
-    if (ul_Echo_Time / 58 > ((width) - (15 + 4 * turnCounter)) || readLineTracker(5)) // the right side of the condition is the width of the subtract the free zone
-    {
-      //sideDistance = Ping(left)
-      ScorpionDrive(200, 200);
-      // inlcude break statement if light sensor detected
-    }
-    else {
-      ScorpionDrive(0, 200); // turn
-      turnCounter++;
-    }
-  }
-  else if (!turnCounter % 2)
-  {
-    Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
-    if (ul_Echo_Time / 58 > 1) // in cm, need better value
-    {
-      //sideDistance = ping(right);
-      ScorpionDrive(200, 200);
-
-    }
-    else {
-      ScorpionDrive(200, 0); // turn(might not be correct)
-      turnCounter++;
-    }
-  }
-//>>>>>>> origin/master
-  }
-
-  void findHome()
-  {
-    if (turnCounter % 2)
-    {
-//<<<<<<< HEAD
-      Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
-      while (ul_Echo_Time / 58 > 1)
-      {
-        ScorpionDrive(200, 200);
-      }
-      //turn left
-      while (ul_Echo_Time / 58 > 5)
-      {
-        ScorpionDrive(200, 200);
-      }
-      turnCounter = 0;
-    }
-    else if (turnCounter % 2)
-//=======
-    Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
-    while (ul_Echo_Time / 58 > ((width) - (15 + 4 * turnCounter)) || readLineTracker(5))
-//>>>>>>> origin/master
-    {
-      Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
-      ScorpionDrive(200, 200);
-    }
-    ScorpionDrive(0, 200);
-    delay(1000);
-    ScorpionDrive(0, 200);
-    delay(1000);
-  }
-
-  while (ul_Echo_Time / 58 > 1)
-  { Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
-
-    ScorpionDrive(200, 200);
-  }
-  ScorpionDrive(0, 200);
-  delay(1000);
-  while(ul_Echo_Time / 58 > 5)
-  {
-    ScorpionDrive(200, 200);
-  }
-  ScorpionDrive(0, 200);
-  delay(1000);
-  turnCounter = 0;
-  returnToNavigation = true;
-}
-
-  }
-  //  void ModeTwoPickUp() {
-  //    Ping();
-  //    if (( ul_Echo_Time <= 10 /**mm**/) && ( ul_Echo_Time >= 5)) {
-  //      ScorpionDrive (1500, 1500);
-  //      tailExtend(degreeOfExtension, degreeOfTurn); //guess need to know actual value (extends to 45 and looks at position
-  //      if (magnet(hallEffectPin) == true) { //NEED PIN NUMBER***********************************************************************
-  //        magnet(); //picks up cube
-  //        tailTuck(); //tucks the tail
-  //      }
-  //      else {
-  //        if (degreeOfTurn <= 90) {
-  //          degreeOfTurn = degreeOfTurn + 90;
-  //          ModeTwoPickUp();
-  //        }
-  //        else {
-  //          degreeOfTurn = 0; ///MIGHT NEED TO WATCH OUT FOR BOT PLACING CUBE******************************************************
-  //          ModeTwoPickUp();
-  //          >>> >>> > origin / master
-  //        }
+  //<<<<<<< HEAD
+  //
+  //  if (turnCounter % 2)
+  //  {
+  //    findWidth();
+  //    Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center); // which ultrasonic?
+  //    if (ul_Echo_Time / 58 > ((width) - (15 + 4 * turnCounter)) || ReadLineTracker) // the right side of the condition is the width of the subtract the free zone
+  //    {
+  //      Survey (50);
+  //      if ((magnet(hallLeftClaw)) || (magnet(hallRightClaw))) {
+  //        ecRoadMap = 2;
+  //        break;
   //        ScorpionDrive(200, 200);
   //        // inlcude break statement if light sensor detected
   //      }
-  //      ScorpionDrive(0, 200); // turn
-  //      turnCounter++;
+  //      else {
+  //        ScorpionDrive(0, 200); // turn
+  //        turnCounter++;
+  //      }
   //    }
-  //    else if (turnCounter % 2)
+  //    else if (!turnCounter % 2)
   //    {
+  //      Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
+  //      if (ul_Echo_Time / 58 > 1) // in cm, need better value
+  //      {
+  //        ScoripionDrive(200, 200);
   //
+  //      }
+  //      else {
+  //        ScorpionDrive(200, 0); // turn(might not be correct)
+  //        turnCounter++;
+  //      }
   //    }
-  //
-  //  }
 
-  void DetectionPlace() {
-    if ((ecTessPlaceL == 0) && (ecTessPlaceR == 0)) {
-      ecdSearch++;
-    }
-    else if ((ecTessPlaceL > 0) && (ecTessPlaceR == 0)) {
-      servo_LeftClawHorizontal.write(ecTessPlaceL);
-      PickUpPassBack(ci_LeftClawVertical, ci_LeftClawGrip);
-      ecRoadMap = 3;
-    }
-    else if ((ecTessPlaceR > 0) && (ecTessPlaceL == 0)) {
-      servo_RightClawHorizontal.write(ecTessPlaceR);
-      PickUpPassBack(ci_RightClawVertical, ci_RightClawGrip);
-      ecRoadMap = 3;
-    }
-  }
 
-  void tailWrite(double Rot, double A, double B, double C) {
-    //Base Servo
-    krtailAPosTarget = A;
-    //Appendage Servo
-    krtailBPosTarget = B;
-    //Piston Extend Servo
-    krtailCPosTarget = C;
-    //Rot servo 
-    krtailRotPosTarget = Rot;
-    
-    double maxTarget;
-    if (krtailAPosTarget != krtailAPosTarget2 || krtailBPosTarget != krtailBPosTarget2 || krtailCPosTarget != krtailCPosTarget2 || krtailRotPosTarget != krtailRotPosTarget2)
+  //=======
+  if (turnCounter % 2)
+  {
+    findWidth();
+    centerPing();
+    if (ksFrontDistance > width) || readLineTracker()) // the right side of the condition is the width of the subtract the free zone
     {
-      if (krtailAPosTarget >= krtailBPosTarget && krtailAPosTarget >= krtailCPosTarget && krtailAPosTarget >= krtailRotPosTarget)
-        maxTarget = krtailAPosTarget;
-
-      else if (krtailBPosTarget >= krtailAPosTarget && krtailBPosTarget >= krtailCPosTarget && krtailBPosTarget >= krtailRotPosTarget)
-        maxTarget = krtailBPosTarget;
-
-      else if (krtailCPosTarget >= krtailAPosTarget && krtailCPosTarget >= krtailBPosTarget && krtailCPosTarget >= krtailRotPosTarget)
-        maxTarget = krtailCPosTarget;
-
-      else
-        maxTarget = krtailRotPosTarget;
-
-      krtailARate = krtailAPosTarget / maxTarget;
-      krtailBRate = krtailBPosTarget / maxTarget;
-      krtailCRate = krtailCPosTarget / maxTarget;
-      krtailRotRate = krtailRotPosTarget / maxTarget;
-
-      krtailAPosTarget2 = krtailAPosTarget;
-      krtailBPosTarget2 = krtailBPosTarget;
-      krtailCPosTarget2 = krtailCPosTarget;
-      krtailRotPosTarget2 = krtailRotPosTarget;
+      sideDistance = sidePing(ci_UltrasonicLeft);
+      ScorpionDrive(200, 200);// constant driving speed
     }
-    if ((millis() - krtailTimer1) > krtailSpeed) {
-      if (sqrt(pow((krtailAPos - krtailAPosTarget), 2)) <= sqrt(pow(krtailARate, 2)))
-        krtailAPos = krtailAPosTarget;
-      else
-        krtailAPos = krtailAPos + krtailARate;
-      krtailA.write(krtailAPos);
-
-      if (sqrt(pow((krtailBPos - krtailBPosTarget), 2)) <= sqrt(pow(krtailBRate, 2)))
-        krtailBPos = krtailBPosTarget;
-      else
-        krtailBPos = krtailBPos + krtailBRate;
-      krtailB.write(krtailBPos);
-
-      if (sqrt(pow((krtailCPos - krtailCPosTarget), 2)) <= sqrt(pow(krtailCRate, 2)))
-        krtailCPos = krtailCPosTarget;
-      else
-        krtailCPos = krtailCPos + krtailCRate;
-      krtailC.write(krtailCPos);
-
-      if (sqrt(pow((krtailRotPos - krtailRotPosTarget), 2)) <= sqrt(pow(krtailRotRate, 2)))
-        krtailRotPos = krtailRotPosTarget;
-      else
-        krtailRotPos = krtailRotPos + krtailRotRate;
-      krtailRot.write(krtailRotPos);
-
-      krtailTimer1 = millis();
+    else {
+      //turn Left for a bit and then use side ultrasonics to get into proper position
+      ScorpionDrive(-200, 200); // turn
+      delay(100);
+      while (sidePing(ci_UltrasonicsLeft(left) > width - 8) // random value
+             turnCounter++;
     }
-  }
-
-  void DropMagnet() {
-    servo_Piston.write(0);
-  }
-  void PickUpMagnet() {
-    servo_Piston.write(180);
-  }
-  void angleMagnet(int angleMag) {
-    servo_PistonExtend.write(angleMag);
-  }
-
-bool readLineTracker(int lineTrackerPin)
-{
-  if(lineTrackerPin == bottomLineTracker)
- ksDark = 995;
- else if (lineTrackerPin == topLineTracker)
- ksDark = 1005;
-   if (analogRead(lineTrackerPin) > ksDark)
-   return true;
- else
-   return false;
 }
-void allignWithBase(){}
-void GoBackToTrack()
-{
-    ScorpionDrive(0, 200);
-    delay(1000);
-    Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
-    while (ul_Echo_Time / 58 > sideDistance) //walk until sideDistance
+else if (!turnCounter % 2)
+  {
+    centerPing();
+    if (ksFrontDistance  > 1) // in cm, need better value
     {
+      sideDistance = sidePing(ci_UltrasonicsRight);
+      ScorpionDrive(200, 200);
+    }
+    else {
+      //turn right  and then use side ultrasonics to get into porper postion
+      ScorpionDrive(200, -200); // turn(might not be correct)
+      turnCounter++;
+    }
+  }
+  //>>>>>>> origin/master
+}
+
+void findHome()
+{
+  if (turnCounter % 2)
+  {
+    //<<<<<<< HEAD
+    centerPing();
+    while (ksFrontDistance > 1)
+    {
+      centerPing();
+      ScorpionDrive(200, 200);
+    }
+    //turn left
+    centerPing();
+    while (ksFrontDistance  > 5)
+    {
+      centerPing();
       ScorpionDrive(200, 200);
     }
     turnCounter = 0;
+  }
+  else if (turnCounter % 2)
+    //=======
+    centerPing();
+  while (ksFrontDistance > width || readLineTracker(5))
+    //>>>>>>> origin/master
+  {
+    centerPing();
+    ScorpionDrive(200, 200);
+  }
+  ScorpionDrive(0, 200);
+  delay(1000);
+  ScorpionDrive(0, 200);
+  delay(1000);
+}
+
+while (ksFrontDistance > 1)
+{
+  centerPing():
+
+    ScorpionDrive(200, 200);
+  }
+  ScorpionDrive(0, 200);
+  delay(1000);
+  while (ksFrontDistance > 5)
+{
+  ScorpionDrive(200, 200);
+}
+ScorpionDrive(0, 200);
+delay(1000);
+turnCounter = 0;
+
+}
+// going back to navigation, skips part that is has already scanned
+void GoBackToTrack()
+{
+
+  ScorpionDrive(0, 200);
+  delay(1000);
+  Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
+  while (ul_Echo_Time / 58 > sideDistance) //walk until sideDistance
+  {
+    ScorpionDrive(200, 200);
+  }
+  turnCounter = 0;
+}
+
+}
+//  void ModeTwoPickUp() {
+//    Ping();
+//    if (( ul_Echo_Time <= 10 /**mm**/) && ( ul_Echo_Time >= 5)) {
+//      ScorpionDrive (1500, 1500);
+//      tailExtend(degreeOfExtension, degreeOfTurn); //guess need to know actual value (extends to 45 and looks at position
+//      if (magnet(hallEffectPin) == true) { //NEED PIN NUMBER***********************************************************************
+//        magnet(); //picks up cube
+//        tailTuck(); //tucks the tail
+//      }
+//      else {
+//        if (degreeOfTurn <= 90) {
+//          degreeOfTurn = degreeOfTurn + 90;
+//          ModeTwoPickUp();
+//        }
+//        else {
+//          degreeOfTurn = 0; ///MIGHT NEED TO WATCH OUT FOR BOT PLACING CUBE******************************************************
+//          ModeTwoPickUp();
+//          >>> >>> > origin / master
+//        }
+//        ScorpionDrive(200, 200);
+//        // inlcude break statement if light sensor detected
+//      }
+//      ScorpionDrive(0, 200); // turn
+//      turnCounter++;
+//    }
+//    else if (turnCounter % 2)
+//    {
+//
+//    }
+//
+//  }
+
+void DetectionPlace() {
+  if ((ecTessPlaceL == 0) && (ecTessPlaceR == 0)) {
+    ecdSearch++;
+  }
+  else if ((ecTessPlaceL > 0) && (ecTessPlaceR == 0)) {
+    servo_LeftClawHorizontal.write(ecTessPlaceL);
+    PickUpPassBack(ci_LeftClawVertical, ci_LeftClawGrip);
+    ecRoadMap = 3;
+  }
+  else if ((ecTessPlaceR > 0) && (ecTessPlaceL == 0)) {
+    servo_RightClawHorizontal.write(ecTessPlaceR);
+    PickUpPassBack(ci_RightClawVertical, ci_RightClawGrip);
+    ecRoadMap = 3;
+  }
+}
+
+void tailWrite(double Rot, double A, double B, double C) {
+  //Base Servo
+  krtailAPosTarget = A;
+  //Appendage Servo
+  krtailBPosTarget = B;
+  //Piston Extend Servo
+  krtailCPosTarget = C;
+  //Rot servo
+  krtailRotPosTarget = Rot;
+
+  double maxTarget;
+  if (krtailAPosTarget != krtailAPosTarget2 || krtailBPosTarget != krtailBPosTarget2 || krtailCPosTarget != krtailCPosTarget2 || krtailRotPosTarget != krtailRotPosTarget2)
+  {
+    if (krtailAPosTarget >= krtailBPosTarget && krtailAPosTarget >= krtailCPosTarget && krtailAPosTarget >= krtailRotPosTarget)
+      maxTarget = krtailAPosTarget;
+
+    else if (krtailBPosTarget >= krtailAPosTarget && krtailBPosTarget >= krtailCPosTarget && krtailBPosTarget >= krtailRotPosTarget)
+      maxTarget = krtailBPosTarget;
+
+    else if (krtailCPosTarget >= krtailAPosTarget && krtailCPosTarget >= krtailBPosTarget && krtailCPosTarget >= krtailRotPosTarget)
+      maxTarget = krtailCPosTarget;
+
+    else
+      maxTarget = krtailRotPosTarget;
+
+    krtailARate = krtailAPosTarget / maxTarget;
+    krtailBRate = krtailBPosTarget / maxTarget;
+    krtailCRate = krtailCPosTarget / maxTarget;
+    krtailRotRate = krtailRotPosTarget / maxTarget;
+
+    krtailAPosTarget2 = krtailAPosTarget;
+    krtailBPosTarget2 = krtailBPosTarget;
+    krtailCPosTarget2 = krtailCPosTarget;
+    krtailRotPosTarget2 = krtailRotPosTarget;
+  }
+  if ((millis() - krtailTimer1) > krtailSpeed) {
+    if (sqrt(pow((krtailAPos - krtailAPosTarget), 2)) <= sqrt(pow(krtailARate, 2)))
+      krtailAPos = krtailAPosTarget;
+    else
+      krtailAPos = krtailAPos + krtailARate;
+    krtailA.write(krtailAPos);
+
+    if (sqrt(pow((krtailBPos - krtailBPosTarget), 2)) <= sqrt(pow(krtailBRate, 2)))
+      krtailBPos = krtailBPosTarget;
+    else
+      krtailBPos = krtailBPos + krtailBRate;
+    krtailB.write(krtailBPos);
+
+    if (sqrt(pow((krtailCPos - krtailCPosTarget), 2)) <= sqrt(pow(krtailCRate, 2)))
+      krtailCPos = krtailCPosTarget;
+    else
+      krtailCPos = krtailCPos + krtailCRate;
+    krtailC.write(krtailCPos);
+
+    if (sqrt(pow((krtailRotPos - krtailRotPosTarget), 2)) <= sqrt(pow(krtailRotRate, 2)))
+      krtailRotPos = krtailRotPosTarget;
+    else
+      krtailRotPos = krtailRotPos + krtailRotRate;
+    krtailRot.write(krtailRotPos);
+
+    krtailTimer1 = millis();
+  }
+}
+
+void DropMagnet() {
+  servo_Piston.write(0);
+}
+void PickUpMagnet() {
+  servo_Piston.write(180);
+}
+void angleMagnet(int angleMag) {
+  servo_PistonExtend.write(angleMag);
+}
+
+bool readLineTracker(int lineTrackerPin)
+{
+  if (lineTrackerPin == bottomLineTracker)
+    ksDark = 995;
+  else if (lineTrackerPin == topLineTracker)
+    ksDark = 1005;
+  if (analogRead(lineTrackerPin) > ksDark)
+    return true;
+  else
+    return false;
+}
+
+void allignWithBase() {}
+void GoBackToTrack()
+{
+  ScorpionDrive(0, 200);
+  delay(1000);
+  Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
+  while (ul_Echo_Time / 58 > sideDistance) //walk until sideDistance
+  {
+    ScorpionDrive(200, 200);
+  }
+  turnCounter = 0;
 }
 
 
