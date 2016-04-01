@@ -176,6 +176,7 @@ void angleMagnet(int angleMag); //NEED TO BE WRITTEN
 bool readLineTracker(int lineTrackerPin);//NEEDS TO BE WRITTEN
 void allignWithBase(); //NEED TO BE WRITTEN
 void GoBackToTrack(); //NEED TO BE WRITTEN
+void turn90(char direction);
 
 void setup() {
 
@@ -538,7 +539,8 @@ void navigation()
     }
     else {
       //turn Left for a bit and then use side ultrasonics to get into proper position
-      ScorpionDrive(-200, 200); // turn
+      turn90(l); // turn
+      turn90(l);
       delay(100);
       while (sidePing(ci_UltrasonicsLeft(left) > width - 8) // random value
              turnCounter++;
@@ -554,7 +556,8 @@ else if (!turnCounter % 2)
     }
     else {
       //turn right  and then use side ultrasonics to get into porper postion
-      ScorpionDrive(200, -200); // turn(might not be correct)
+      turn90(r); // turn(might not be correct)
+      turn90(r);
       turnCounter++;
     }
   }
@@ -590,10 +593,8 @@ void findHome()
     centerPing();
     ScorpionDrive(200, 200);
   }
-  ScorpionDrive(0, 200);
-  delay(1000);
-  ScorpionDrive(0, 200);
-  delay(1000);
+  turn90(l);
+  turn90(l);
 }
 
 while (ksFrontDistance > 1)
@@ -602,14 +603,12 @@ while (ksFrontDistance > 1)
 
     ScorpionDrive(200, 200);
   }
-  ScorpionDrive(0, 200);
-  delay(1000);
+ turn90(l);
   while (ksFrontDistance > 5)
 {
   ScorpionDrive(200, 200);
 }
-ScorpionDrive(0, 200);
-delay(1000);
+turn90(l);
 turnCounter = 0;
 
 }
@@ -617,10 +616,9 @@ turnCounter = 0;
 void GoBackToTrack()
 {
 
-  ScorpionDrive(0, 200);
-  delay(1000);
-  Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
-  while (ul_Echo_Time / 58 > sideDistance) //walk until sideDistance
+  turn90(l);
+  centerPing();
+  while (ksFrontDistance > sideDistance) //walk until sideDistance
   {
     ScorpionDrive(200, 200);
   }
@@ -763,16 +761,23 @@ bool readLineTracker(int lineTrackerPin)
 }
 
 void allignWithBase() {}
-void GoBackToTrack()
+
+void turn90(char direction)
 {
-  ScorpionDrive(0, 200);
-  delay(1000);
-  Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
-  while (ul_Echo_Time / 58 > sideDistance) //walk until sideDistance
+  long prevTime = millis();
+  int left = 350, right = 350;
+  if (direction == 'l')
+    left = -left;
+  else if (direction == 'r')
+    right = -right;
+
+  while (millis() - prevTime < turnInterval)
   {
-    ScorpionDrive(200, 200);
+    ScorpionDrive(left, right);
   }
-  turnCounter = 0;
+
+  ScorpionDrive(0, 0);
+
 }
 
 
