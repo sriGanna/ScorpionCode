@@ -116,6 +116,9 @@ bool navigate = true;
 int prevTurnCount;
 bool goHome = false;
 
+//Line Tracker
+int ksDark;
+
 //Port pin constants Microcontroller 1
 const int ci_Right_Motor = 11;
 const int ci_Left_Motor = 2;
@@ -131,7 +134,7 @@ const int ci_LeftClawVertical = 6;
 const int ci_RightClawVertical = 9;
 const int hallLeftClaw = A5;
 const int hallRightClaw = A0;
-const int lineTracker = 1;
+const int bottomLineTracker = 1;
 
 //Microcontroller 2
 const int TailRot = 11;
@@ -140,7 +143,7 @@ const int TailAppend = 10;
 const int Piston = 5;
 const int PistonExtend = 3;
 const int TailHall = A5;
-const int LineTrack = 3; 
+const int topLineTracker = 3; 
 
 //motor speed vairables
 const int ci_Left_Motor_Stop = 1500;        // 200 for brake mode; 1500 for stop
@@ -164,10 +167,7 @@ void Ping(int Input, int Output);
 bool magnet(int hallEffectPin);
 void DetectionPlace();
 void navigation();
-void turn90L();
-void turn90R();
 void findWidth();
-void findLength();
 void findHome();
 void DropMagnet();
 void PickUpMagnet();
@@ -282,7 +282,7 @@ void loop() {
     int ScanNum = 0;
     tailWrite(ecReturnTailRot, ecReturnTailX, ecReturnTailY, ecReturnTailZ);
     for (int tailRot = ecReturnTailRot; tailRot <= 180; tailRot++) {     //NEED TO CHANGE 180 DEGREES --EC
-      if (readLineTracker(lineTracker)) {
+      if (readLineTracker(topLineTracker)) {
         ScanNum++;
       }
       if (HomeNum == ScanNum) {
@@ -298,7 +298,6 @@ void loop() {
     }
   }
   else if (ecRoadMap == 6) {
-    allignWithBase();
     GoBackToTrack();
   }
 }
@@ -579,10 +578,15 @@ void navigation()
   }
 
   void tailWrite(double Rot, double A, double B, double C) {
+    //Base Servo
     krtailAPosTarget = A;
+    //Appendage Servo
     krtailBPosTarget = B;
+    //Piston Extend Servo
     krtailCPosTarget = C;
+    //Rot servo 
     krtailRotPosTarget = Rot;
+    
     double maxTarget;
     if (krtailAPosTarget != krtailAPosTarget2 || krtailBPosTarget != krtailBPosTarget2 || krtailCPosTarget != krtailCPosTarget2 || krtailRotPosTarget != krtailRotPosTarget2)
     {
@@ -647,7 +651,17 @@ void navigation()
     servo_PistonExtend.write(angleMag);
   }
 
-bool readLineTracker(int lineTrackerPin){}
+bool readLineTracker(int lineTrackerPin)
+{
+  if(lineTrackerPin == bottomLineTracker)
+ ksDark = 995;
+ else if (lineTrackerPin == topLineTracker)
+ ksDark = 1005;
+   if (analogRead(lineTrackerPin) > ksDark)
+   return true;
+ else
+   return false;
+}
 void allignWithBase(){}
 void GoBackToTrack(){}
 
