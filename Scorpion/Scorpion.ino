@@ -605,7 +605,7 @@ while (ksFrontDistance > 1)
 
     ScorpionDrive(200, 200);
   }
- turn90(l);
+  turn90(l);
   while (ksFrontDistance > 5)
 {
   ScorpionDrive(200, 200);
@@ -617,7 +617,6 @@ turnCounter = 0;
 // going back to navigation, skips part that is has already scanned
 void GoBackToTrack()
 {
-
   turn90(l);
   centerPing();
   while (ksFrontDistance > sideDistance) //walk until sideDistance
