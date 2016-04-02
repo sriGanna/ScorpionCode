@@ -135,7 +135,8 @@ const int ci_LeftClawVertical = 6;
 const int ci_RightClawVertical = 9;
 const int hallLeftClaw = A5;
 const int hallRightClaw = A0;
-const int bottomLineTracker = 1;
+const int bottomLineTracker = A1;
+
 
 //Microcontroller 2
 const int TailRot = 11;
@@ -144,7 +145,7 @@ const int TailAppend = 10;
 const int Piston = 5;
 const int PistonExtend = 3;
 const int TailHall = A5;
-const int topLineTracker = 3;
+const int topLineTracker = A3;
 
 //motor speed vairables
 const int ci_Left_Motor_Stop = 1500;        // 200 for brake mode; 1500 for stop
@@ -232,7 +233,7 @@ void loop() {
     else if (ecdSearch == 1) {
       if ((millis() - walkForwardPrevTime) <= 10) { // how far it moves forward NEED TO TEST VALUE
         walkForwardPrevTime = millis();
-        ScorpionDrive(100, 100);
+        ScorpionDrive(300, 300);
       }
       ScorpionDrive(0, 0); //stops bot
       Survey(50);
@@ -241,7 +242,7 @@ void loop() {
     else if (ecdSearch == 2) {
       if ((millis() - walkBackPrevTime) <= 20) { // how far it moves forward NEED TO TEST VALUE
         walkBackPrevTime = millis();
-        ScorpionDrive(-100, -100);
+        ScorpionDrive(-300, -300);
       }
       ScorpionDrive(0, 0); //stops bot
       Survey(50);
@@ -250,7 +251,7 @@ void loop() {
     else if (ecdSearch > 2) {
       if ((millis() - ResetPrevTime) <= 30) { // how far it moves forward NEED TO TEST VALUE
         ResetPrevTime = millis();
-        ScorpionDrive(-100, -100);
+        ScorpionDrive(-300, -300);
       }
     }
 
@@ -263,6 +264,7 @@ void loop() {
       servo_RightClawHorizontal.write(ecHomeClawR);
     }
     tailWrite(ecHomeTailRot, ecHomeTailX, ecHomeTailY, ecHomeTailZ);
+    //consider putting a delay here so that we reach the position before extending the magnetg
     angleMagnet(90);
     PickUpMagnet();
     angleMagnet(0);
