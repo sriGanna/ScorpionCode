@@ -6,10 +6,10 @@
 #include <uSTimer2.h>
 
 //Tail
-Servo krtailA;
-Servo krtailB;
-Servo krtailC;
-Servo krtailRot;
+Servo servo_appendage1;  // create servo object to control a servo
+Servo servo_base;// twelve servo objects can be created on most boards
+Servo servo_pistonExtend,
+
 
 int krtailSpeed = 20;
 int krtailTimer1 = 0;
@@ -32,10 +32,6 @@ double krtailBRate = 0;
 double krtailCRate = 0;
 double krtailRotRate = 0;
 
-//Piston Magnet Device
-Servo servo_Piston;
-Servo servo_PistonExtend;
-
 //Scoripion Drive Varaibles
 int leftSpeed, rightSpeed;
 Servo servo_RightMotor;
@@ -57,8 +53,8 @@ int sgClawGripCloseL = 0;
 int sgClawGripCloseR = 130;
 
 //hall effect function varaibles
-int sgMagnetDetectionValueTHigh = 495; // with piston up
-int sgMagnetDetectionValueTLow = 485; // with piston up
+int sgMagnetDetectionValueTHigh = 495; // with piston retracted
+int sgMagnetDetectionValueTLow = 485; // with piston retracted
 int sgMagnetDetectionValueRHigh = 510;
 int sgMagnetDetectionValueRLow = 505;
 int sgMagnetDetectionValueLHigh = 515;
@@ -135,17 +131,16 @@ const int ci_LeftClawVertical = 6;
 const int ci_RightClawVertical = 9;
 const int hallLeftClaw = A5;
 const int hallRightClaw = A0;
-const int bottomLineTracker = A1;
-
+const int bottomLineTracker = 1;
 
 //Microcontroller 2
-const int TailRot = 11;
-const int TailBase = 9;
-const int TailAppend = 10;
-const int Piston = 5;
-const int PistonExtend = 3;
-const int TailHall = A5;
-const int topLineTracker = A3;
+const int ci_TailRot = 11;
+const int ci_TailBase = 9;
+const int ci_TailAppend = 10;
+const int ci_Piston = 5;
+const int ci_PistonExtend = 3;
+const int ci_TailHall = A5;
+const int topLineTracker = 3;
 
 //motor speed vairables
 const int ci_Left_Motor_Stop = 1500;        // 200 for brake mode; 1500 for stop
@@ -233,7 +228,7 @@ void loop() {
     else if (ecdSearch == 1) {
       if ((millis() - walkForwardPrevTime) <= 10) { // how far it moves forward NEED TO TEST VALUE
         walkForwardPrevTime = millis();
-        ScorpionDrive(300, 300);
+        ScorpionDrive(100, 100);
       }
       ScorpionDrive(0, 0); //stops bot
       Survey(50);
@@ -242,7 +237,7 @@ void loop() {
     else if (ecdSearch == 2) {
       if ((millis() - walkBackPrevTime) <= 20) { // how far it moves forward NEED TO TEST VALUE
         walkBackPrevTime = millis();
-        ScorpionDrive(-300, -300);
+        ScorpionDrive(-100, -100);
       }
       ScorpionDrive(0, 0); //stops bot
       Survey(50);
@@ -251,7 +246,7 @@ void loop() {
     else if (ecdSearch > 2) {
       if ((millis() - ResetPrevTime) <= 30) { // how far it moves forward NEED TO TEST VALUE
         ResetPrevTime = millis();
-        ScorpionDrive(-300, -300);
+        ScorpionDrive(-100, -100);
       }
     }
 
@@ -264,7 +259,6 @@ void loop() {
       servo_RightClawHorizontal.write(ecHomeClawR);
     }
     tailWrite(ecHomeTailRot, ecHomeTailX, ecHomeTailY, ecHomeTailZ);
-    //consider putting a delay here so that we reach the position before extending the magnetg
     angleMagnet(90);
     PickUpMagnet();
     angleMagnet(0);
@@ -304,8 +298,8 @@ void loop() {
 
 void ScorpionDrive(int left, int right)
 {
-  ui_Left_Motor_Speed = constrain(1500 + leftSpeed, 1600, 2100);
-  ui_Right_Motor_Speed = constrain(1500 + rightSpeed, 1600, 2100);
+  ui_Left_Motor_Speed = constrain(1500 + leftSpeed, 1000, 2100);
+  ui_Right_Motor_Speed = constrain(1500 + rightSpeed, 1000, 2100);
   servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed);
   servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed);
 }
