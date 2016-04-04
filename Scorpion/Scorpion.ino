@@ -8,36 +8,16 @@
 //Tail
 Servo servo_appendage1;  // create servo object to control a servo
 Servo servo_base;// twelve servo objects can be created on most boards
-Servo servo_pistonExtend,
+Servo servo_pistonExtend;
+Servo servo_piston;
 
-
-int krtailSpeed = 20;
-int krtailTimer1 = 0;
-
-double krtailAPos = 20;
-double krtailBPos = 20;
-double krtailCPos = 20;
-double krtailRotPos = 20;
-double krtailAPosTarget = 20;
-double krtailBPosTarget = 20;
-double krtailCPosTarget = 20;
-double krtailRotPosTarget = 20;
-double krtailAPosTarget2 = 20;
-double krtailBPosTarget2 = 20;
-double krtailCPosTarget2 = 20;
-double krtailRotPosTarget2 = 20;
-
-double krtailARate = 0;
-double krtailBRate = 0;
-double krtailCRate = 0;
-double krtailRotRate = 0;
 
 //Scoripion Drive Varaibles
 int leftSpeed, rightSpeed;
 Servo servo_RightMotor;
 Servo servo_LeftMotor;
 
-//servey function
+//survey function
 Servo servo_RightClawHorizontal, servo_LeftClawHorizontal;
 long sgSurveyPrevTime;
 int sgAngleIncrement = 1; // how much we want to increment the angle by
@@ -45,14 +25,14 @@ int sgSurveyAngleMax = 180; // to be determined by testing
 int sgSurveyAngleMin = 0; // to be determined by testing
 int sgPos;
 
-// grip function variable
+// grip function variables
 Servo sgMyServo;
 int ecClawGripOpenL = 180;
 int ecClawGripOpenR = 0;
 int sgClawGripCloseL = 0;
 int sgClawGripCloseR = 130;
 
-//hall effect function varaibles
+//hall effect function variables
 int sgMagnetDetectionValueTHigh = 495; // with piston retracted
 int sgMagnetDetectionValueTLow = 485; // with piston retracted
 int sgMagnetDetectionValueRHigh = 510;
@@ -83,27 +63,8 @@ int walkBackPrevTime;
 int ResetPrevTime;
 int ecHomeClawR;
 int ecHomeClawL;
-//home tail variables are for the tess pick up
-int ecHomeTailRot;
-int ecHomeTailX;
-int ecHomeTailY;
-int ecHomeTailZ;
-//base tail variables are for the basic position of the tail
-int ecBaseTailRot;
-int ecBaseTailX;
-int ecBaseTailY;
-int ecBaseTailZ;
-//return tail variables are for tessaract placement at endge of arena
-int ecReturnTailRot;
-int ecReturnTailX;
-int ecReturnTailY;
-int ecReturnTailZ;
 
 int HomeNum = 0;
-
-//tail constants
-int degreeOfExtension = 45;
-int degreeOfTurn = 0;
 
 //navigation function variables
 int turnNumber = 0;
@@ -142,7 +103,14 @@ const int ci_PistonExtend = 3;
 const int ci_TailHall = A5;
 const int topLineTracker = 3;
 
-//motor speed vairables
+int mode2LDistance;
+int mode2RDistance;
+int noWhere;
+bool foundSide;
+long prevTime;
+long distTime = 0;
+
+//motor speed variables
 const int ci_Left_Motor_Stop = 1500;        // 200 for brake mode; 1500 for stop
 const int ci_Right_Motor_Stop = 1500;
 unsigned int ui_Motors_Speed = 1800;        // Default run speed
@@ -150,7 +118,6 @@ unsigned int ui_Left_Motor_Speed;
 unsigned int ui_Right_Motor_Speed;
 
 //functions
-void tailWrite(double Rot, double A, double B, double C);
 void ScorpionDrive(int leftSpeed, int rightSpeed);
 void clawGripOpen(int clawHorizontalPin);
 void clawGripClose(int clawHorizontalPin);
@@ -168,8 +135,7 @@ void findWidth();
 void findHome();
 void DropMagnet();
 void PickUpMagnet();
-void angleMagnet(int angleMag); //NEED TO BE WRITTEN
-bool readLineTracker(int lineTrackerPin);//NEEDS TO BE WRITTEN
+bool readLineTracker(int lineTrackerPin);
 void allignWithBase(); //NEED TO BE WRITTEN
 void GoBackToTrack(); //NEED TO BE WRITTEN
 void turn90(char direction);
@@ -215,8 +181,27 @@ void setup() {
 }
 
 void loop() {
+  
+if (Serial.available()) {
+      {
+        ecRoadMap = Serial.read();
+      }
 
-  if (ecRoadMap == 1) {
+mode = digitalRead(ci_SwitchPin);
+if (!mode)
+//mode 1
+ {
+   if(ecRoadMap == 0)
+   {
+     //detach everything which can be detached
+   servo_RightMotor.detach();
+  servo_LeftMotor.detach();
+  servo_RightClawHorizontal.detach();
+  servo_LeftClawHorizontal.detach();
+  VerticalClawServoL.detach();
+  VerticalClawServoR.detach();
+   }
+   if (ecRoadMap == 1) {
     navigation();
   }
   else if (ecRoadMap == 2) {
@@ -248,6 +233,10 @@ void loop() {
         ResetPrevTime = millis();
         ScorpionDrive(-100, -100);
       }
+      
+      ecRoadMap++;
+        Serial.write(ecRoadMap);
+        ecRoadMap = 0;
     }
 
   }
@@ -258,11 +247,9 @@ void loop() {
     else if ((ecTessPlaceR > 0) && (ecTessPlaceL == 0)) {
       servo_RightClawHorizontal.write(ecHomeClawR);
     }
-    tailWrite(ecHomeTailRot, ecHomeTailX, ecHomeTailY, ecHomeTailZ);
-    angleMagnet(90);
-    PickUpMagnet();
-    angleMagnet(0);
-    tailWrite(ecBaseTailRot, ecBaseTailX, ecBaseTailY, ecBaseTailZ);
+    ecRoadMap++;
+        Serial.write(ecRoadMap);
+        ecRoadMap = 0;
   }
 
   else if (ecRoadMap == 4) {
@@ -271,29 +258,36 @@ void loop() {
     if (HomeNum > 3) {
       HomeNum = 0;
     }
+    ecRoadMap++;
+        Serial.write(ecRoadMap);
+        ecRoadMap = 0;
   }
   else if (ecRoadMap == 5) {
     int ScanNum = 0;
-    tailWrite(ecReturnTailRot, ecReturnTailX, ecReturnTailY, ecReturnTailZ);
-    for (int tailRot = ecReturnTailRot; tailRot <= 180; tailRot++) {     //NEED TO CHANGE 180 DEGREES --EC
-      if (readLineTracker(topLineTracker)) {
-        ScanNum++;
-      }
-      if (HomeNum == ScanNum) {
-        break;
-      }
-      krtailRot.write(tailRot);
-      delay(15);
-    }
-    if (HomeNum == ScanNum) {
-      angleMagnet(90);
-      DropMagnet();
-      angleMagnet(0);
+    ecRoadMap++;
+        Serial.write(ecRoadMap);
+        ecRoadMap = 0;
     }
   }
   else if (ecRoadMap == 6) {
     GoBackToTrack();
   }
+}
+
+else if (mode)
+//mode 2
+if (Mode2RoadMap == 2)
+{
+  passUnderGate1();
+  mode2RoadMap++;
+  Serial.write(mode2RoadMap);
+}
+else if(Mode2RoadMap == 5)
+{
+  passUnderGate2();
+  mode2RoadMap++;
+  Serial.write(mode2RoadMap);
+}
 }
 
 void ScorpionDrive(int left, int right)
@@ -488,42 +482,6 @@ void findWidth()
 
 void navigation()
 {
-  //<<<<<<< HEAD
-  //
-  //  if (turnCounter % 2)
-  //  {
-  //    findWidth();
-  //    Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center); // which ultrasonic?
-  //    if (ul_Echo_Time / 58 > ((width) - (15 + 4 * turnCounter)) || ReadLineTracker) // the right side of the condition is the width of the subtract the free zone
-  //    {
-  //      Survey (50);
-  //      if ((magnet(hallLeftClaw)) || (magnet(hallRightClaw))) {
-  //        ecRoadMap = 2;
-  //        break;
-  //        ScorpionDrive(200, 200);
-  //        // inlcude break statement if light sensor detected
-  //      }
-  //      else {
-  //        ScorpionDrive(0, 200); // turn
-  //        turnCounter++;
-  //      }
-  //    }
-  //    else if (!turnCounter % 2)
-  //    {
-  //      Ping(ci_Ultrasonic_Ping_Center, ci_Ultrasonic_Data_Center);
-  //      if (ul_Echo_Time / 58 > 1) // in cm, need better value
-  //      {
-  //        ScoripionDrive(200, 200);
-  //
-  //      }
-  //      else {
-  //        ScorpionDrive(200, 0); // turn(might not be correct)
-  //        turnCounter++;
-  //      }
-  //    }
-
-
-  //=======
   if (turnCounter % 2)
   {
     findWidth();
@@ -557,7 +515,23 @@ else if (!turnCounter % 2)
       turnCounter++;
     }
   }
-  //>>>>>>> origin/master
+
+}
+else if (!turnCounter % 2)
+  {
+    centerPing();
+    if (ksFrontDistance  > 1) // in cm, need better value
+    {
+      sideDistance = sidePing(ci_UltrasonicsRight);
+      ScorpionDrive(200, 200);
+    }
+    else {
+      //turn right  and then use side ultrasonics to get into proper postion
+      turn90(r); // turn(might not be correct)
+      turn90(r);
+      turnCounter++;
+    }
+  }
 }
 
 void findHome()
@@ -669,70 +643,6 @@ void DetectionPlace() {
   }
 }
 
-void tailWrite(double Rot, double A, double B, double C) {
-  //Base Servo
-  krtailAPosTarget = A;
-  //Appendage Servo
-  krtailBPosTarget = B;
-  //Piston Extend Servo
-  krtailCPosTarget = C;
-  //Rot servo
-  krtailRotPosTarget = Rot;
-
-  double maxTarget;
-  if (krtailAPosTarget != krtailAPosTarget2 || krtailBPosTarget != krtailBPosTarget2 || krtailCPosTarget != krtailCPosTarget2 || krtailRotPosTarget != krtailRotPosTarget2)
-  {
-    if (krtailAPosTarget >= krtailBPosTarget && krtailAPosTarget >= krtailCPosTarget && krtailAPosTarget >= krtailRotPosTarget)
-      maxTarget = krtailAPosTarget;
-
-    else if (krtailBPosTarget >= krtailAPosTarget && krtailBPosTarget >= krtailCPosTarget && krtailBPosTarget >= krtailRotPosTarget)
-      maxTarget = krtailBPosTarget;
-
-    else if (krtailCPosTarget >= krtailAPosTarget && krtailCPosTarget >= krtailBPosTarget && krtailCPosTarget >= krtailRotPosTarget)
-      maxTarget = krtailCPosTarget;
-
-    else
-      maxTarget = krtailRotPosTarget;
-
-    krtailARate = krtailAPosTarget / maxTarget;
-    krtailBRate = krtailBPosTarget / maxTarget;
-    krtailCRate = krtailCPosTarget / maxTarget;
-    krtailRotRate = krtailRotPosTarget / maxTarget;
-
-    krtailAPosTarget2 = krtailAPosTarget;
-    krtailBPosTarget2 = krtailBPosTarget;
-    krtailCPosTarget2 = krtailCPosTarget;
-    krtailRotPosTarget2 = krtailRotPosTarget;
-  }
-  if ((millis() - krtailTimer1) > krtailSpeed) {
-    if (sqrt(pow((krtailAPos - krtailAPosTarget), 2)) <= sqrt(pow(krtailARate, 2)))
-      krtailAPos = krtailAPosTarget;
-    else
-      krtailAPos = krtailAPos + krtailARate;
-    krtailA.write(krtailAPos);
-
-    if (sqrt(pow((krtailBPos - krtailBPosTarget), 2)) <= sqrt(pow(krtailBRate, 2)))
-      krtailBPos = krtailBPosTarget;
-    else
-      krtailBPos = krtailBPos + krtailBRate;
-    krtailB.write(krtailBPos);
-
-    if (sqrt(pow((krtailCPos - krtailCPosTarget), 2)) <= sqrt(pow(krtailCRate, 2)))
-      krtailCPos = krtailCPosTarget;
-    else
-      krtailCPos = krtailCPos + krtailCRate;
-    krtailC.write(krtailCPos);
-
-    if (sqrt(pow((krtailRotPos - krtailRotPosTarget), 2)) <= sqrt(pow(krtailRotRate, 2)))
-      krtailRotPos = krtailRotPosTarget;
-    else
-      krtailRotPos = krtailRotPos + krtailRotRate;
-    krtailRot.write(krtailRotPos);
-
-    krtailTimer1 = millis();
-  }
-}
-
 void DropMagnet() {
   servo_Piston.write(0);
 }
@@ -773,6 +683,58 @@ void turn90(char direction)
 
   ScorpionDrive(0, 0);
 
+}
+
+//functions needed
+void ScorpionDrive(int leftSpeed, int rightSpeed);
+int sidePing(int pin);
+
+//functions made
+void passUnderGate1();
+void passUnderGate2();
+
+//function definitions:
+
+void passUnderGate1()
+{
+  prevTime = millis();
+  ScorpionDrive(300, 300);
+  delay(1000);
+  tailCollapse();
+  ScorpionDrive(-300, -300);
+  delay(1000);
+  if (sidePing(ci_Ultrasonic_Left) < noWhere || sidePing(ci_Ultrasonic_Right) < noWhere)
+  {
+    foundSide = true;
+  }
+  mode2LDistance = sidePing(ci_Ultrasonic_Left);
+  mode2RDistance = sidePing(ci_Ultrasonic_Right);
+  while (sidePing(ci_Ultrasonic_Left) <= mode2LDistance && sidePing(ci_Ultrasonic_Right) <= mode2RDistance)
+  {
+    ScorpionDrive(-300, -300);
+  }
+  distTime = millis() - prevTime;
+  ScorpionDrive(-300, -300);
+  delay(1000);
+  ScorpionDrive(0,0);
+
+}
+
+void passUnderGate2()
+{
+  prevTime = millis();
+  ScorpionDrive(300, 300);
+  delay(1000);
+  tailCollapse();
+  while (sidePing(ci_Ultrasonic_Left) >= noWhere || sidePing(ci_Ultrasonic_Right) >= noWhere)
+  {
+    ScorpionDrive(-300, -300);
+  }
+  foundSide = true;
+  distTime = millis() - prevTime;
+  ScorpionDrive(-300, -300);
+  delay(1000);// determine delay by testing :P 
+  ScorpionDrive(0, 0);
 }
 
 
