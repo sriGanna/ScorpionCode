@@ -81,6 +81,10 @@ void loop() {
       if (ecRoadMap == 0)
       {
         //resting mode, detach anything that can be detached.
+        servo_base.detach();  
+        servo_appendage1.detach();
+        servo_baseRot.detach();
+  
       }
       if (ecRoadMap == 4)
       {
@@ -139,7 +143,8 @@ void loop() {
 
     if (mode2RoadMap == 0)
     {
-      // turn all useless things off
+      baseRot.detach();
+      
     }
     if (mode2RoadMap == 1)
     {
