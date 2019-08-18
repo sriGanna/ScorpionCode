@@ -1,5 +1,7 @@
 
 ![ScorpionBot](scbSideView.PNG)
+![ScorpionBot](scbIsoView.PNG)
+
 
 
 ScorpionBot is a mechatronic device capable of identifying, manipulating, and transporting functional tesseracts(magnetic cubes).  
